@@ -37,10 +37,10 @@ It calculates base stats by Size, applies **Modifications**, manages **Vehicular
 ---
 
 ## 🚀 Quick Start
-- **Option A: double-click index.html
-- **Option B (recommended): serve locally
-- **python3 -m http.server 8080
-- **open http://localhost:8080
+- Option A: double-click index.html
+- Option B (recommended): serve locally
+- python3 -m http.server 8080
+- open http://localhost:8080
 
 ## 📁 Project Structure
 ├── index.html        # App layout: Size picker, Modifications, Weapons UI, Stat Blocks
