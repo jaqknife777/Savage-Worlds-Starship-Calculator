@@ -429,11 +429,35 @@ weaponUI.linkMode?.addEventListener('change', () => {
 });
 
 
-function linkFixedBonuses(mode, group){
-  if (mode !== 'linked' && mode !== 'fixed') return { toHit: 0, dmg: 0 };
-  const g = (group === 4 ? 4 : 2);
-  const perWeapon = (mode === 'linked') ? {toHit: 2, dmg: 4} : {toHit: 4, dmg: 8};
-  return { toHit: perWeapon.toHit * g, dmg: perWeapon.dmg * g };
+
+// --- Linked/Fixed helpers: determine effective group present on this entry ---
+function computeEffectiveGroup(mode, qty, selectedGroup){
+  if (mode !== 'linked' && mode !== 'fixed') return 0;
+  const q = Math.max(0, parseInt(qty || 0, 10));
+  // If they picked 4 and have 4+ mounts, use 4; otherwise use 2 if they have 2+
+  if (selectedGroup === 4 && q >= 4) return 4;
+  if (q >= 2) return 2;
+  return 0; // not enough mounts for any group
+}
+
+
+
+// Returns { toHit, dmg, effGroup }:
+// - toHit is flat: +1 for 2-group, +2 for 4-group
+// - dmg stays "as is": linked = +4 per weapon; fixed = +8 per weapon
+function linkFixedBonuses(mode, group, qty){
+  const eff = computeEffectiveGroup(mode, qty, group);
+  if (!eff) return { toHit: 0, dmg: 0, effGroup: 0 };
+
+  const toHit = (eff === 4 ? 2 : 1); // capped by group size only
+
+  let dmgPerWeapon = 0;
+  if (mode === 'linked') dmgPerWeapon = 4;
+  else if (mode === 'fixed') dmgPerWeapon = 8;
+
+  const dmg = dmgPerWeapon * eff; // per-weapon dmg, group count weapons
+
+  return { toHit, dmg, effGroup: eff };
 }
 
 
@@ -717,10 +741,12 @@ function renderWeapons(){
 	const dmgDisp    = w.dmg.replace('X', ew.level || '');
 	const shotsDisp  = (w.shots === 'ammo') ? String(ew.ammo) : w.shots;
 	
-	const bonus      = linkFixedBonuses(ew.mode, ew.group);
+	const bonus      = linkFixedBonuses(ew.mode, ew.group, ew.qty);
 	const modeLabel  = (ew.mode === 'linked' ? 'Linked' : (ew.mode === 'fixed' ? 'Fixed' : '—'));
-	const groupLabel = (ew.mode === 'none' ? '—' : String((ew.group === 4) ? 4 : 2));
+	const groupLabel = (bonus.effGroup ? String(bonus.effGroup) : '—');
 	
+	
+
 
     // Columns: name, range, damage, rof, shots, mods, cost, notes, qty(launchers), ammo
 	// build row
@@ -728,13 +754,14 @@ function renderWeapons(){
 	  prettyName, w.range, dmgDisp, w.rof, shotsDisp,
 	  String(mods),
 	  '$' + Number(entryCost).toLocaleString(),
-	  w.notes + ((bonus.toHit||bonus.dmg) ? ` ( ${modeLabel} x${groupLabel}: +${bonus.toHit} to hit, +${bonus.dmg} dmg; mods halved )` : ''),
+	  w.notes + (bonus.effGroup
+		? ` ( ${modeLabel} x${groupLabel}: +${bonus.toHit} to hit, +${bonus.dmg} dmg; mods halved )`
+		: ''),
 	  String(ew.qty),
 	  isAmmoType ? String(ew.ammo) : '',
 	  modeLabel,
 	  groupLabel
-	];
-	
+	]
 	
 	
     cols.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); });
@@ -772,7 +799,7 @@ function renderWeapons(){
 		}
 
 		// ⬇️ NEW: append link/fixed bonuses + notes
-		const bonus = linkFixedBonuses(ew.mode, ew.group);
+		const bonus = linkFixedBonuses(ew.mode, ew.group, ew.qty);
 		const modeLabel  = (ew.mode === 'linked' ? 'Linked' : (ew.mode === 'fixed' ? 'Fixed' : null));
 		const groupLabel = (ew.mode === 'none' ? null : (ew.group === 4 ? 4 : 2));
 		const parts = [];
