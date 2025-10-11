@@ -12,7 +12,7 @@ It calculates base stats by Size, applies **Modifications**, manages **Vehicular
 - **Size presets** (Tiny → World Killer) with Acc/TS, Climb, Toughness, Crew, Energy, Mod Slots, Cost.
 - **Modifications** (input-first layout; controls right-aligned, labels left-aligned) with live effects on stats.
 - **Vehicular Weapons**
-  - Auto-Cannons, Cannons, Lasers, Flamethrower, Grenade Launcher, etc.
+  - Auto-Cannons, Cannons, Ion Cannons, Lasers, Flamethrower, Grenade Launcher, etc.
   - **Mass Driver (level-based)**  
     - Damage = *Level*d12  
     - **Mods = ceil(Level/2) per mount**  
