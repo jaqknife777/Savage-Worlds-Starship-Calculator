@@ -44,5 +44,7 @@ It calculates base stats by Size, applies **Modifications**, manages **Vehicular
 
 ## 📁 Project Structure
 ├── index.html        # App layout: Size picker, Modifications, Weapons UI, Stat Blocks
+
 ├── style.css         # Theme + layout rules (grid for stat block; right/left alignment for mods)
+
 └── calculator.js     # All logic: data tables, UI building, calculations, rendering
