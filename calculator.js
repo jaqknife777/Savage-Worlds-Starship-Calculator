@@ -272,7 +272,7 @@ let equippedWeapons = [];
 	  cost: s => 50_000 * s,
 	  slotFn: s => Math.ceil(s / 2)
 	},
-    "Bomb Bay":                { label: "Bomb Bay",                limit: "U", cost: s => 50000 * s },
+
     "Crew Reduction":          { label: "Crew Reduction",          limit: 5,   cost: _ => 10000 },
     "Crew Space":              { label: "Crew Space",              limit: "U", cost: s => 10000 * s },
 	// Deflector Screens: 2 slots for Small–Large (≤12), 3 for Huge–Gargantuan (≤24), 5 for larger
@@ -292,6 +292,7 @@ let equippedWeapons = [];
 	},
 	  
     "FTL Drive":               { label: "FTL Drive",               limit: 1,   cost: s => 2_000_000 * s, slotFn: s => Math.ceil(s / 2) },
+	
 	"Kalian FTL": {
 	  label: "Kalian FTL",
 	  limit: 1,
@@ -300,7 +301,13 @@ let equippedWeapons = [];
 	},
 
 
-    "Fuel Pods":               { label: "Fuel Pods",               limit: "U", cost: s => 100000 * s },
+	"Fuel Pods": {
+	  label: "Fuel Pods",
+	  limit: "U",
+	  cost: s => 100_000 * s,          // $100k × Size per pod
+	  slotFn: s => Math.ceil(s / 2)    // ½ Size slots per pod (rounded up)
+	},
+
 	"Garage / Hangar": {
 	  label: "Garage / Hangar (Large+).",
 	  limit: "U",                    // we'll cap dynamically by size
@@ -325,8 +332,17 @@ let equippedWeapons = [];
 	  cost: s => 1_000_000 * s,
 	  slotFn: _ => 2
 	},
+	
     "Sensor Suite, Planetary": { label: "Sensor Suite, Planetary", limit: 1,   cost: s => 50000 * s },
-    "Shields":                 { label: "Shields",                 limit: 1,   cost: s => 25000 * s },
+	
+	// Shields — slots = ½ Size (rounded up), cost stays 25,000 × Size, limit 1
+	"Shields": {
+	label: "Shields",
+	limit: 1,
+	cost: s => 25_000 * s,
+	slotFn: s => Math.ceil(s / 2)
+	},
+
 	// Sloped Armor: 2 slots, limit 1
 	"Sloped Armor": {
 	  label: "Sloped Armor",
@@ -342,7 +358,14 @@ let equippedWeapons = [];
 	slotFn: _ => 0      // <-- important: does NOT consume slots
 	},
 
-    "Stealth System":          { label: "Stealth System",          limit: 1,   cost: s => 50000 * s },
+	// Stealth System — slots = Size, cost stays 50,000 × Size, limit 1
+	"Stealth System": {
+	  label: "Stealth System",
+	  limit: 1,
+	  cost: s => 50_000 * s,
+	  slotFn: s => s
+	},
+
 	"Superstructure": {
 	  label: "Superstructure (Gargantuan+)",
 	  limit: "U",
@@ -632,10 +655,11 @@ function computeCapacityAndSlots(modCountsOverride, weaponsOverride) {
 
   // Apply same clamps you use in calculateMods()
   // (Mercantile Huge+, Superstructure Large+, Garage/Hangar cap)
-  if ((modCounts["Mercantile"] || 0) && data.size < 16) modCounts["Mercantile"] = 0;
-  
-	if (modName === "Superstructure") {
-	  if (data.size < 24) count = 0; // not allowed below Gargantuan
+	if (data.size < 16 && (modCounts["Mercantile"] || 0)) {
+	  modCounts["Mercantile"] = 0;          // Huge+ only
+	}
+	if (data.size < 24 && (modCounts["Superstructure"] || 0)) {
+	  modCounts["Superstructure"] = 0;      // Gargantuan+ only
 	}
 
   
@@ -721,6 +745,9 @@ function calculateMods() {
   let modCost     = 0;
   let crew        = data.crew;
   let toughness   = data.toughness;
+  let energyCap   = data.energy;      // base energy; will be adjusted by Fuel Pods
+
+  
 
   // Acc/TS parsing: for strings like "8/45/600", we treat Acc=45, TS=600
   const sp = data.accTS.split("/").map(n => parseInt(n, 10));
@@ -787,6 +814,12 @@ function calculateMods() {
 		  acc += 5 * count;
 		  ts  += 50 * count;
 		  break;
+		  
+		case "Fuel Pods":
+			// +50% of BASE energy per pod (additive on base)
+			energyCap = Math.round(data.energy * (1 + 0.5 * count));
+			break;
+
 
 		case "Speed Reduction":
 		  // Each rank: Acc -5, TS -50; +1 Mod capacity per rank
@@ -835,17 +868,23 @@ function calculateMods() {
   // Update DOM
   results.slotsUsed.textContent       = slotsUsed;
   results.slotsRemaining.textContent  = slotsRemaining;
-  results.modCost.textContent         = fmt(modCost);
+
   if (weaponUI) {
     weaponUI.weaponSlotsUsed.textContent = weaponSlots;
     weaponUI.weaponCost.textContent      = fmt(weaponCost);
   }
+  
+  results.energy.textContent = energyCap;
+  results.modCost.textContent = fmt(modCost); // includes Fuel Pods
   results.totalCost.textContent       = fmt(data.cost + modCost);
   results.adjustedCrew.textContent    = Math.ceil(crew);
   results.adjustedToughness.textContent = toughness;
 
   // Adjusted Speed: Acc/TS
   results.adjustedSpeed.textContent = `${acc}/${ts}`;
+
+
+  
 
   const astroEl = document.getElementById("astrogationMod");
   if (astroEl) astroEl.textContent = (astrogationBonus >= 0 ? "+" : "") + astrogationBonus;
