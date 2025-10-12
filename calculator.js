@@ -265,13 +265,32 @@ let equippedWeapons = [];
     "AMCM":                    { label: "AMCM",                    limit: 1,   cost: s => 5000 * s },
     "Armor":                   { label: "Armor",                   limit: "Size", cost: s => 10000 * s },
     "Artificial Intelligence": { label: "Artificial Intelligence", limit: 1,   cost: s => 10000 * s },
-    "Atmospheric":             { label: "Atmospheric",             limit: 1,   cost: s => 50000 * s },
+	// Atmospheric: 1/2 the ship Size in Mod slots (rounded up), limit 1
+	"Atmospheric": {
+	  label: "Atmospheric",
+	  limit: 1,
+	  cost: s => 50_000 * s,
+	  slotFn: s => Math.ceil(s / 2)
+	},
     "Bomb Bay":                { label: "Bomb Bay",                limit: "U", cost: s => 50000 * s },
     "Crew Reduction":          { label: "Crew Reduction",          limit: 5,   cost: _ => 10000 },
     "Crew Space":              { label: "Crew Space",              limit: "U", cost: s => 10000 * s },
-    "Deflector Screens":       { label: "Deflector Screens",       limit: 1,   cost: s => (s <= 12 ? 2 : s <= 24 ? 3 : 5) * 100000 }, // scaled to plausible cost
-    "Electromagnetic Shielding": { label: "Electromagnetic Shielding", limit: 1, cost: s => 5000 * s },
-  
+	// Deflector Screens: 2 slots for Small–Large (≤12), 3 for Huge–Gargantuan (≤24), 5 for larger
+
+	"Deflector Screens": {
+	  label: "Deflector Screens",
+	  limit: 1,
+	  cost: s => 10_000 * s,
+	  slotFn: s => (s <= 12 ? 2 : s <= 24 ? 3 : 5)
+	},
+	// Electromagnetic Shielding: 2 slots, limit 1
+	"Electromagnetic Shielding": {
+	  label: "Electromagnetic Shielding",
+	  limit: 1,
+	  cost: s => 5_000 * s,
+	  slotFn: _ => 2
+	},
+	  
     "FTL Drive":               { label: "FTL Drive",               limit: 1,   cost: s => 2_000_000 * s, slotFn: s => Math.ceil(s / 2) },
 	"Kalian FTL": {
 	  label: "Kalian FTL",
@@ -282,15 +301,39 @@ let equippedWeapons = [];
 
 
     "Fuel Pods":               { label: "Fuel Pods",               limit: "U", cost: s => 100000 * s },
-    "Garage / Hangar":         { label: "Garage / Hangar",         limit: "U", cost: s => 1000000 * s },
+	"Garage / Hangar": {
+	  label: "Garage / Hangar (Large+).",
+	  limit: "U",                    // we'll cap dynamically by size
+	  cost: _ => 1_000_000,          // flat $1M per garage
+	  slotFn: _ => 8                 // house rule: 8 Mod slots each
+	},
+
    
-    "Mercantile":              { label: "Mercantile",              limit: "U", cost: s => 100000 * s },
+
+	"Mercantile": {
+	  label: "Mercantile (Huge+)",
+	  limit: "U",
+	  cost: _ => 100000,   // flat $100k each
+	  slotFn: _ => 2       // 2 Mod slots per Mercantile
+	},
    
     "Passenger Pod":           { label: "Passenger Pod",           limit: "U", cost: s => 50000 * s },
-    "Sensor Suite, Galactic":  { label: "Sensor Suite, Galactic",  limit: 1,   cost: s => 100000 * s },
+	// Sensor Suite, Galactic: 2 slots, limit 1
+	"Sensor Suite, Galactic": {
+	  label: "Sensor Suite, Galactic",
+	  limit: 1,
+	  cost: s => 1_000_000 * s,
+	  slotFn: _ => 2
+	},
     "Sensor Suite, Planetary": { label: "Sensor Suite, Planetary", limit: 1,   cost: s => 50000 * s },
     "Shields":                 { label: "Shields",                 limit: 1,   cost: s => 25000 * s },
-    "Sloped Armor":            { label: "Sloped Armor",            limit: 1,   cost: s => 5000 * s },
+	// Sloped Armor: 2 slots, limit 1
+	"Sloped Armor": {
+	  label: "Sloped Armor",
+	  limit: 1,
+	  cost: s => 5_000 * s,
+	  slotFn: _ => 2
+	},
     "Speed":                   { label: "Speed",                   limit: "U", cost: s => 100000 * s },
 	"Speed Reduction": 		   { 
 	label: "Speed Reduction",  	   
@@ -300,11 +343,30 @@ let equippedWeapons = [];
 	},
 
     "Stealth System":          { label: "Stealth System",          limit: 1,   cost: s => 50000 * s },
-    "Superstructure":          { label: "Superstructure",          limit: "U", cost: s => 5000000 * s },
+	"Superstructure": {
+	  label: "Superstructure (Gargantuan+)",
+	  limit: "U",
+	  cost: s => 5_000_000 * s,
+	  slotFn: _ => 16          // ← each Superstructure consumes 10 Mod slots
+	},
+
     "Targeting System":        { label: "Targeting System",        limit: 1,   cost: s => 10000 * s },
-    "Teleporter":              { label: "Teleporter",              limit: "U", cost: _ => 5_000_000 },
+	
+	// Teleporter: 2 slots, unlimited
+	"Teleporter": {
+	  label: "Teleporter",
+	  limit: "U",
+	  cost: _ => 5_000_000,
+	  slotFn: _ => 2
+	},
    
-    "Tractor Beam":            { label: "Tractor Beam",            limit: "U", cost: s => 1000000 * s }
+	// Tractor Beam: 5 slots, unlimited
+	"Tractor Beam": {
+	  label: "Tractor Beam",
+	  limit: "U",
+	  cost: s => 1_000_000,
+	  slotFn: _ => 5
+	},
   };
 
 
@@ -327,16 +389,54 @@ function buildModRows() {
       input.type = "number";
       input.min = 0;
       input.step = 1;
+
       if (def.limit === "Size") {
         input.max = sizeData[parseInt(shipSizeSelect.value, 10)].size;
       } else if (typeof def.limit === "number") {
         input.max = def.limit;
       }
-      input.value = 0;
+
+	// --- Mercantile gating (Huge+ only) ---
+	if (key === "Mercantile") {
+	  const sz = sizeData[parseInt(shipSizeSelect.value, 10)].size;
+	  const allowed = (sz >= 16); // Huge or larger
+	  input.disabled = !allowed;
+	  if (!allowed) input.value = 0; // clamp UI value
+	  input.title = allowed
+		? "Available on Size 16+ (Huge) ships"
+		: "Requires ship Size 16+ (Huge) to install";
+	}
+
+      // --- Garage / Hangar gating (already added) ---
+      if (key === "Garage / Hangar") {
+        const sz = sizeData[parseInt(shipSizeSelect.value, 10)].size;
+        const maxGarages = sz >= 12 ? Math.floor(sz / 8) : 0;
+        input.max = maxGarages;
+        input.disabled = (maxGarages === 0);
+        input.value = Math.min(parseInt(input.value || "0", 10) || 0, maxGarages);
+        input.title = maxGarages === 0
+          ? "Requires ship Size 12+ (Large) to install"
+          : `Maximum by Size: ${maxGarages}`;
+      }
+
+	// --- Superstructure gating (Gargantuan+ only) ---
+	if (key === "Superstructure") {
+	  const sz = sizeData[parseInt(shipSizeSelect.value, 10)].size;
+	  const allowed = (sz >= 24); // Gargantuan (24) or larger
+	  input.disabled = !allowed;
+	  if (!allowed) input.value = 0; // clamp UI value
+	  input.title = allowed
+		? "Available on Size 24+ (Gargantuan) ships"
+		: "Requires Size 24+ (Gargantuan) to install";
+	}
+
+
+      // default init if not set by the special cases
+      if (input.value === "" || input.value == null) input.value = 0;
     }
 
     const label = document.createElement("label");
-    label.textContent = ":" + def.label;
+    label.textContent = def.label + ":";
     label.htmlFor = input.id;
 
     row.appendChild(input);
@@ -344,6 +444,7 @@ function buildModRows() {
     modContainer.appendChild(row);
   });
 }
+
 
 function isLinkableWeapon(w){
   if (!w) return false;
@@ -513,6 +614,102 @@ function enforceSpeedExclusivity(trigger){
 
 
 
+// ---- CAPACITY HELPERS ----
+
+// Sum slots & capacity from *current DOM* (or passed-in snapshots).
+function computeCapacityAndSlots(modCountsOverride, weaponsOverride) {
+  const sizeKey = parseInt(shipSizeSelect.value, 10);
+  const data = sizeData[sizeKey];
+
+  // Collect mod counts (from DOM unless provided)
+  const modCounts = modCountsOverride || (() => {
+    const out = {};
+    getAllModInputs().forEach(input => {
+      out[input.dataset.name] = getCountForInput(input);
+    });
+    return out;
+  })();
+
+  // Apply same clamps you use in calculateMods()
+  // (Mercantile Huge+, Superstructure Large+, Garage/Hangar cap)
+  if ((modCounts["Mercantile"] || 0) && data.size < 16) modCounts["Mercantile"] = 0;
+  
+	if (modName === "Superstructure") {
+	  if (data.size < 24) count = 0; // not allowed below Gargantuan
+	}
+
+  
+  if (modCounts["Garage / Hangar"] != null) {
+    const maxG = data.size >= 12 ? Math.floor(data.size / 8) : 0;
+    if (modCounts["Garage / Hangar"] > maxG) modCounts["Garage / Hangar"] = maxG;
+  }
+  // Speed vs Speed Reduction exclusivity (prefer Speed)
+  if ((modCounts["Speed"] || 0) > 0 && (modCounts["Speed Reduction"] || 0) > 0) {
+    modCounts["Speed Reduction"] = 0;
+  }
+
+  // Slots used by mods + speed-reduction extra capacity
+  let slotsUsed = 0;
+  let extraCapacity = 0;
+  Object.keys(modCounts).forEach(name => {
+    const def = modDefinitions[name];
+    const count = modCounts[name] || 0;
+    if (!count) return;
+
+    // slots for this mod
+    const perCountSlots = typeof def.slotFn === "function" ? def.slotFn(data.size) : 1;
+    slotsUsed += perCountSlots * count;
+
+    if (name === "Speed Reduction") {
+      // each rank grants +1 capacity (your current rule)
+      extraCapacity += 1 * count;
+    }
+  });
+
+  // Add weapon slots (from state unless override provided)
+  const weps = Array.isArray(weaponsOverride) ? weaponsOverride : equippedWeapons;
+  weps.forEach(ew => {
+    const w = WEAPONS.find(x => x.key === ew.key); if (!w) return;
+    slotsUsed += weaponModsFor(w, ew.level, ew.qty, ew.ammo, ew.qty, ew.mode, ew.group);
+  });
+
+  const totalCapacity = data.mods + extraCapacity;
+  return { slotsUsed, totalCapacity };
+}
+
+// Clamp a single number input so the *whole build* stays <= capacity.
+function clampInputToCapacity(inputEl) {
+  // quick escape for checkboxes and disabled inputs
+  if (!inputEl || inputEl.type !== 'number' || inputEl.disabled) return;
+
+  const name = inputEl.dataset.name;
+  const curVal = parseInt(inputEl.value || '0', 10) || 0;
+
+  // Build a shadow modCounts with this input's current value
+  const modCounts = {};
+  getAllModInputs().forEach(i => {
+    modCounts[i.dataset.name] = getCountForInput(i);
+  });
+
+  // If we're fine, done
+  let { slotsUsed, totalCapacity } = computeCapacityAndSlots(modCounts);
+  if (slotsUsed <= totalCapacity) return;
+
+  // Otherwise, reduce this input until it fits
+  let v = curVal;
+  while (v > 0) {
+    v -= 1;
+    modCounts[name] = v;
+    const check = computeCapacityAndSlots(modCounts);
+    if (check.slotsUsed <= check.totalCapacity) break;
+  }
+  inputEl.value = String(Math.max(0, v));
+}
+
+
+
+
+
 function calculateMods() {
   const sizeKey = parseInt(shipSizeSelect.value, 10);
   const data = sizeData[sizeKey];
@@ -552,18 +749,34 @@ function calculateMods() {
 
 	  // Apply mods
 	Object.keys(modCounts).forEach(modName => {
-	  const def   = modDefinitions[modName];
-	  const count = modCounts[modName] || 0;
+	  const def = modDefinitions[modName];
+	  let count = modCounts[modName] || 0;
+	  
+	  if (modName === "Mercantile") {
+		if (data.size < 16) count = 0;  // not allowed below Huge
+		}
+
+		if (modName === "Superstructure") {
+			if (data.size < 12) count = 0; // not allowed below Large
+		}
+
+
+	  // 🔒 Enforce Garage/Hangar cap by Size (Large+ only)
+	  if (modName === "Garage / Hangar") {
+		const sz = sizeData[sizeKey].size;
+		const maxG = sz >= 12 ? Math.floor(sz / 8) : 0;
+		if (count > maxG) count = maxG;
+	  }
+
 	  if (!count) return;
 
 	  // Cost
 	  modCost += def.cost(data.size) * count;
 
-	  // Slots (default 1 per count unless special rule)
+	  // Slots
 	  const perCountSlots = typeof def.slotFn === "function" ? def.slotFn(data.size) : 1;
 	  slotsUsed += perCountSlots * count;
 
-	  // Stat effects
 	  switch (modName) {
 		case "Armor":
 		  toughness += 2 * count;
@@ -669,11 +882,19 @@ function calculateMods() {
   // Delegate mod input changes
 	modContainer.addEventListener("input", (e) => {
 	  const name = e.target?.dataset?.name;
+
+	  // maintain Speed vs Speed Reduction exclusivity live
 	  if (name === "Speed" || name === "Speed Reduction") {
-		enforceSpeedExclusivity(name);  // clear the other one based on what changed
+		enforceSpeedExclusivity(name);
 	  }
+
+	  // Clamp this input so total slots can’t exceed capacity
+	  clampInputToCapacity(e.target);
+
+	  // Recompute UI
 	  calculateMods();
 	});
+
 
 
   // Initial render
@@ -747,7 +968,9 @@ function addWeapon(){
   const w = WEAPONS.find(x => x.key === key);
   if (!w) return;
 
-  // collect linking/fixed inputs if applicable
+  // Compute the slot impact of *this* addition
+  let newEntry, newMods = 0;
+
   const linkable = isLinkableWeapon(w);
   const mode  = linkable ? weaponUI.linkMode.value : 'none';
   const group = linkable ? parseInt(weaponUI.linkGroup.value || '2', 10) : 2;
@@ -755,20 +978,33 @@ function addWeapon(){
   if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') {
     const launchers = Math.max(1, parseInt(weaponUI.launchers.value || '1', 10));
     const ammo = Math.max(0, parseInt(weaponUI.ammo.value || '0', 10));
-    equippedWeapons.push({ key, qty: launchers, ammo, level: 1, mode: 'none', group: 2 });
+    newEntry = { key, qty: launchers, ammo, level: 1, mode: 'none', group: 2 };
+    newMods  = weaponModsFor(w, 1, launchers, ammo, launchers, 'none', 2);
   } else if (w.type === 'level') {
     const qty = Math.max(1, parseInt(weaponUI.qty.value || '1', 10));
     const maxLvl = getMaxMassDriverLevel();
     const level = Math.min(maxLvl, Math.max(1, parseInt(weaponUI.level.value || '1', 10)));
-    equippedWeapons.push({ key, qty, level, ammo: 0, mode, group });
+    newEntry = { key, qty, level, ammo: 0, mode, group };
+    newMods  = weaponModsFor(w, level, qty, 0, qty, mode, group);
   } else {
     const qty = Math.max(1, parseInt(weaponUI.qty.value || '1', 10));
-    equippedWeapons.push({ key, qty, level: 1, ammo: 0, mode, group });
+    newEntry = { key, qty, level: 1, ammo: 0, mode, group };
+    newMods  = weaponModsFor(w, 1, qty, 0, qty, mode, group);
   }
 
+  // Capacity check: current build plus this weapon
+  const snap = computeCapacityAndSlots();
+  if (snap.slotsUsed + newMods > snap.totalCapacity) {
+    alert("Not enough Mod slots remaining for that weapon.");
+    return; // don’t add
+  }
+
+  // OK, add
+  equippedWeapons.push(newEntry);
   renderWeapons();
   calculateMods();
 }
+
 
 
 
