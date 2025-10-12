@@ -17,6 +17,22 @@ document.addEventListener("DOMContentLoaded", () => {
     32: { size: 32, name: "Leviathan",   accTS: "32/20/200", climb: -4, toughness: 70, mods: 120, crew: 20000,energy: 2000,  cost: 10_000_000_000 },
     40: { size: 40, name: "World Killer",accTS: "40/20/200", climb: -5, toughness: 80, mods: 150, crew: 50000,energy: 2000,  cost: 30_000_000_000 }
   };
+  
+  
+ // Armor value by ship Size (Tiny defaults to 4 as requested)
+const armorBySize = {
+  2: 4,   // Tiny
+  4: 5,   // Small
+  8: 6,   // Medium
+  12: 8,  // Large
+  16: 10, // Huge
+  20: 11, // Giant
+  24: 13, // Gargantuan
+  28: 15, // Behemoth
+  32: 20, // Leviathan
+  40: 25  // World Killer
+};
+
 
 	// keep only Acc/TS (drop the leading stat if present)
 	function accTsTwoParts(accTS) {
@@ -505,14 +521,15 @@ function getMaxMassDriverLevel() {
     return Number(n).toLocaleString();
   }
 
-  function updateBaseStats() {
+ function updateBaseStats() {
     const sizeKey = parseInt(shipSizeSelect.value);
     const data = sizeData[sizeKey];
+	const baseArm = armorBySize[data.size] ?? 0;
 
     // Base Stats
     baseStats.sizeNumber.textContent = data.size;
 	baseStats.accTS.textContent = accTsTwoParts(data.accTS);
-    baseStats.toughness.textContent = data.toughness;
+	baseStats.toughness.textContent = `${data.toughness} (${baseArm})`;
     baseStats.crew.textContent = data.crew;
     baseStats.energy.textContent = data.energy;
     baseStats.baseCost.textContent = fmt(data.cost);
@@ -524,7 +541,7 @@ function getMaxMassDriverLevel() {
 	results.accTS.textContent = accTsTwoParts(data.accTS);
     results.climbRate.textContent = data.climb;
     results.energy.textContent = data.energy;
-  }
+ }
   
   
 function updateWeaponFormVisibility() {
@@ -760,6 +777,7 @@ function calculateMods() {
   let modCost     = 0;
   let crew        = data.crew;
   let toughness   = data.toughness;
+  let armorVal    = armorBySize[data.size] ?? 0;   
   let energyCap   = data.energy;      // base energy; will be adjusted by Fuel Pods
 
   
@@ -821,8 +839,11 @@ function calculateMods() {
 
 	  switch (modName) {
 		case "Armor":
+		  // +2 Toughness AND +2 Armor per rank
 		  toughness += 2 * count;
+		  armorVal  += 2 * count;
 		  break;
+
 
 		case "Speed":
 		  // +5 Acc and +50 Top Speed per rank
@@ -896,7 +917,7 @@ function calculateMods() {
   results.modCost.textContent = fmt(modCost); // includes Fuel Pods
   results.totalCost.textContent       = fmt(data.cost + modCost);
   results.adjustedCrew.textContent    = Math.ceil(crew);
-  results.adjustedToughness.textContent = toughness;
+  results.adjustedToughness.textContent = `${toughness} (${armorVal})`;
 
   // Adjusted Speed: Acc/TS
   results.adjustedSpeed.textContent = `${acc}/${ts}`;
