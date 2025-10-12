@@ -844,8 +844,10 @@ function calculateMods() {
 		  break;
 
 		case "Crew Reduction":
-		  for (let i = 0; i < count; i++) crew *= 0.8;
+		  // –4 crew per rank (per slot). Never drop below 1 crew total.
+		  crew = Math.max(1, Math.ceil(crew - 4 * count));
 		  break;
+
 
 		case "Kalian FTL":
 		  astrogationBonus += 2;
