@@ -293,7 +293,13 @@ let equippedWeapons = [];
     "Shields":                 { label: "Shields",                 limit: 1,   cost: s => 25000 * s },
     "Sloped Armor":            { label: "Sloped Armor",            limit: 1,   cost: s => 5000 * s },
     "Speed":                   { label: "Speed",                   limit: "U", cost: s => 100000 * s },
-    "Speed Reduction":         { label: "Speed Reduction",         limit: 3,   cost: _ => 0 },
+	"Speed Reduction": 		   { 
+	label: "Speed Reduction",  	   
+	limit: 3,   
+	cost: _ => 0,  
+	slotFn: _ => 0      // <-- important: does NOT consume slots
+	},
+
     "Stealth System":          { label: "Stealth System",          limit: 1,   cost: s => 50000 * s },
     "Superstructure":          { label: "Superstructure",          limit: "U", cost: s => 5000000 * s },
     "Targeting System":        { label: "Targeting System",        limit: 1,   cost: s => 10000 * s },
@@ -475,115 +481,167 @@ if (weaponUI.select) weaponUI.select.addEventListener('change', updateWeaponForm
     return isNaN(n) ? 0 : Math.max(0, n);
   }
 
+
+
+function getModInput(name){
+  return modContainer.querySelector(`[data-name="${name}"]`);
+}
+function getModCount(name){
+  const el = getModInput(name);
+  if (!el) return 0;
+  if (el.type === 'checkbox') return el.checked ? 1 : 0;
+  const n = parseInt(el.value || '0', 10);
+  return isNaN(n) ? 0 : Math.max(0, n);
+}
+function setModCount(name, val){
+  const el = getModInput(name);
+  if (!el) return;
+  if (el.type === 'checkbox') {
+    el.checked = !!val;
+  } else {
+    el.value = String(Math.max(0, parseInt(val||0,10)));
+  }
+}
+function enforceSpeedExclusivity(trigger){
+  const speedVal = getModCount("Speed");
+  const redVal   = getModCount("Speed Reduction");
+  if (trigger === "Speed" && speedVal > 0 && redVal > 0){
+    setModCount("Speed Reduction", 0);
+  } else if (trigger === "Speed Reduction" && speedVal > 0 && redVal > 0){
+    setModCount("Speed", 0);
+  }
+}
+
+
+
 function calculateMods() {
-    const sizeKey = parseInt(shipSizeSelect.value);
-    const data = sizeData[sizeKey];
-	
+  const sizeKey = parseInt(shipSizeSelect.value, 10);
+  const data = sizeData[sizeKey];
 
-    // Starting (base) values
-    let slotsUsed = 0;
-	let weaponSlots = 0;
-	let weaponCost  = 0;
-    let modCost = 0;
-    let crew = data.crew;
-    let toughness = data.toughness;
-    let speed = parseInt(data.accTS.split("/")[2], 10); // middle number = top speed
-	let astrogationBonus = 0;
+  // Starting (base) values
+  let slotsUsed   = 0;
+  let weaponSlots = 0;
+  let weaponCost  = 0;
+  let modCost     = 0;
+  let crew        = data.crew;
+  let toughness   = data.toughness;
 
+  // Acc/TS parsing: for strings like "8/45/600", we treat Acc=45, TS=600
+  const sp = data.accTS.split("/").map(n => parseInt(n, 10));
+  let acc = (sp.length >= 2 ? sp[1] : sp[0]) || 0;   // Acc = middle number when 3 parts, else first
+  let ts  = (sp.length >= 3 ? sp[2] : sp[1]) || 0;   // TS  = last number when 3 parts, else second
+  let extraCapacity = 0;                              // bonus mod slots from Speed Reduction
 
-    // Apply mods
-    getAllModInputs().forEach(input => {
-      const modName = input.dataset.name;
-      const def = modDefinitions[modName];
-      const count = getCountForInput(input);
-      if (!count) return;
+  let astrogationBonus = 0;
+  
+	  // --- Pre-read mod counts and enforce Speed vs Speed Reduction exclusivity ---
+	const modCounts = {};
+	getAllModInputs().forEach(input => {
+	  modCounts[input.dataset.name] = getCountForInput(input);
+	});
 
-      // Cost
-      const thisCost = def.cost(data.size) * count;
-      modCost += thisCost;
-	  
-	  
-
-      // Slots (default 1 per count unless special rule)
-      const perCountSlots = typeof def.slotFn === "function" ? def.slotFn(data.size) : 1;
-      slotsUsed += perCountSlots * count;
-
-      // Specific stat effects (extend as your ruleset dictates)
-      switch (modName) {
-        case "Armor":
-          // +2 Toughness per count in this example
-          toughness += 2 * count;
-          break;
-        case "Speed":
-          // +50 to the middle speed term per count
-          speed += 50 * count;
-          break;
-        case "Crew Reduction":
-          // Each rank reduces required crew by 20% (stacking multiplicatively)
-          for (let i = 0; i < count; i++) {
-            crew *= 0.8;
-          }
-          break;
-        case "FTL Drive":
-          // No direct stat effect here other than slot usage handled above
-          break;
-		  
-		case "Kalian FTL":
-		// same slots handled via slotFn; adds +2 to Astrogation rolls
-		astrogationBonus += 2;
-		break;
-
-        default:
-          // Other mods not implemented with stat effects yet
-          break;
-      }
-    });
-
-
-// Include weapon slots and cost
-equippedWeapons.forEach(ew => {
-  const w = WEAPONS.find(x => x.key === ew.key);
-  if (!w) return;
-
-  const isAmmoType = (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs');
-
-  const mods     = weaponModsFor(w, ew.level, ew.qty, ew.ammo, ew.qty, ew.mode, ew.group);
-  const baseCost = weaponCostFor(w, ew.level, data.size, ew.qty, ew.ammo, ew.qty);
-  const entryCost = isAmmoType ? baseCost : baseCost * ew.qty;
-
-  weaponSlots += mods;
-  weaponCost  += entryCost;
-});
-
-
-slotsUsed += weaponSlots;
-modCost   += weaponCost;
-
-
-const slotsRemaining = Math.max(0, data.mods - slotsUsed);
-
-
-
-    // Update DOM
-    results.slotsUsed.textContent = slotsUsed;
-    results.slotsRemaining.textContent = slotsRemaining;
-    results.modCost.textContent = fmt(modCost);
-	if (weaponUI) {
-	  weaponUI.weaponSlotsUsed.textContent = weaponSlots;
-	  weaponUI.weaponCost.textContent = fmt(weaponCost);
+	// If both are selected, prefer "Speed" and clear "Speed Reduction"
+	if ((modCounts["Speed"] || 0) > 0 && (modCounts["Speed Reduction"] || 0) > 0) {
+	  modCounts["Speed Reduction"] = 0;
+	  const srInput = modContainer.querySelector('[data-name="Speed Reduction"]');
+	  if (srInput) {
+		if (srInput.type === "checkbox") srInput.checked = false;
+		else srInput.value = 0;
+	  }
 	}
 
 
-    results.totalCost.textContent = fmt(data.cost + modCost);
-    results.adjustedCrew.textContent = Math.ceil(crew);
-    results.adjustedToughness.textContent = toughness;
-    results.adjustedSpeed.textContent = speed;
-	const astroEl = document.getElementById("astrogationMod");
-	if (astroEl) astroEl.textContent = (astrogationBonus >= 0 ? "+" : "") + astrogationBonus;
+	  // Apply mods
+	Object.keys(modCounts).forEach(modName => {
+	  const def   = modDefinitions[modName];
+	  const count = modCounts[modName] || 0;
+	  if (!count) return;
+
+	  // Cost
+	  modCost += def.cost(data.size) * count;
+
+	  // Slots (default 1 per count unless special rule)
+	  const perCountSlots = typeof def.slotFn === "function" ? def.slotFn(data.size) : 1;
+	  slotsUsed += perCountSlots * count;
+
+	  // Stat effects
+	  switch (modName) {
+		case "Armor":
+		  toughness += 2 * count;
+		  break;
+
+		case "Speed":
+		  // +5 Acc and +50 Top Speed per rank
+		  acc += 5 * count;
+		  ts  += 50 * count;
+		  break;
+
+		case "Speed Reduction":
+		  // Each rank: Acc -5, TS -50; +1 Mod capacity per rank
+		  acc -= 5 * count;
+		  ts  -= 50 * count;
+		  extraCapacity += 1 * count;
+		  break;
+
+		case "Crew Reduction":
+		  for (let i = 0; i < count; i++) crew *= 0.8;
+		  break;
+
+		case "Kalian FTL":
+		  astrogationBonus += 2;
+		  break;
+
+		case "FTL Drive":
+		  // effects handled via slots / cost only
+		  break;
+
+		default:
+		  break;
+	  }
+	});
+
+  // Include weapon slots and cost
+  equippedWeapons.forEach(ew => {
+    const w = WEAPONS.find(x => x.key === ew.key);
+    if (!w) return;
+
+    const isAmmoType = (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs');
+    const mods       = weaponModsFor(w, ew.level, ew.qty, ew.ammo, ew.qty, ew.mode, ew.group);
+    const baseCost   = weaponCostFor(w, ew.level, data.size, ew.qty, ew.ammo, ew.qty);
+    const entryCost  = isAmmoType ? baseCost : baseCost * ew.qty;
+
+    weaponSlots += mods;
+    weaponCost  += entryCost;
+  });
+
+  slotsUsed += weaponSlots;
+  modCost   += weaponCost;
+
+  const totalCapacity  = data.mods + extraCapacity;
+  const slotsRemaining = Math.max(0, totalCapacity - slotsUsed);
+
+  // Update DOM
+  results.slotsUsed.textContent       = slotsUsed;
+  results.slotsRemaining.textContent  = slotsRemaining;
+  results.modCost.textContent         = fmt(modCost);
+  if (weaponUI) {
+    weaponUI.weaponSlotsUsed.textContent = weaponSlots;
+    weaponUI.weaponCost.textContent      = fmt(weaponCost);
+  }
+  results.totalCost.textContent       = fmt(data.cost + modCost);
+  results.adjustedCrew.textContent    = Math.ceil(crew);
+  results.adjustedToughness.textContent = toughness;
+
+  // Adjusted Speed: Acc/TS
+  results.adjustedSpeed.textContent = `${acc}/${ts}`;
+
+  const astroEl = document.getElementById("astrogationMod");
+  if (astroEl) astroEl.textContent = (astrogationBonus >= 0 ? "+" : "") + astrogationBonus;
+}
 
 	
 	
-  }
+  
 
   // Event wiring
   shipSizeSelect.addEventListener("change", () => {
@@ -610,7 +668,14 @@ const slotsRemaining = Math.max(0, data.mods - slotsUsed);
   });
 
   // Delegate mod input changes
-  modContainer.addEventListener("input", calculateMods);
+	modContainer.addEventListener("input", (e) => {
+	  const name = e.target?.dataset?.name;
+	  if (name === "Speed" || name === "Speed Reduction") {
+		enforceSpeedExclusivity(name);  // clear the other one based on what changed
+	  }
+	  calculateMods();
+	});
+
 
   // Initial render
   buildModRows();
