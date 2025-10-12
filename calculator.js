@@ -352,7 +352,7 @@ let equippedWeapons = [];
 	},
     "Speed":                   { label: "Speed",                   limit: "U", cost: s => 100000 * s },
 	"Speed Reduction": 		   { 
-	label: "Speed Reduction",  	   
+	label: "Speed Reduction (Limit 3)",  	   
 	limit: 3,   
 	cost: _ => 0,  
 	slotFn: _ => 0      // <-- important: does NOT consume slots
