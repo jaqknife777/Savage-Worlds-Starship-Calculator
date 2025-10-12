@@ -18,6 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
     40: { size: 40, name: "World Killer",accTS: "40/20/200", climb: -5, toughness: 80, mods: 150, crew: 50000,energy: 2000,  cost: 30_000_000_000 }
   };
 
+	// keep only Acc/TS (drop the leading stat if present)
+	function accTsTwoParts(accTS) {
+	  const p = String(accTS).split('/');
+	  return p.length >= 3 ? `${p[1]}/${p[2]}` : p.slice(-2).join('/');
+	}
+
+
   // DOM targets for base stats
   const baseStats = {
     sizeNumber: document.getElementById("sizeNumber"),
@@ -501,7 +508,7 @@ function getMaxMassDriverLevel() {
 
     // Base Stats
     baseStats.sizeNumber.textContent = data.size;
-    baseStats.accTS.textContent = data.accTS;
+	baseStats.accTS.textContent = accTsTwoParts(data.accTS);
     baseStats.toughness.textContent = data.toughness;
     baseStats.crew.textContent = data.crew;
     baseStats.energy.textContent = data.energy;
@@ -511,7 +518,7 @@ function getMaxMassDriverLevel() {
     // Results header
     results.shipNameDisplay.textContent = shipNameInput.value || "";
     results.shipSizeDisplay.textContent = data.name;
-    results.accTS.textContent = data.accTS.split("/").slice(1).join("/");
+	results.accTS.textContent = accTsTwoParts(data.accTS);
     results.climbRate.textContent = data.climb;
     results.energy.textContent = data.energy;
   }
