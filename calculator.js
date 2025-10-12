@@ -125,7 +125,7 @@ const WEAPONS = [
   range: '200/400/800',
   dmg: '6d6',
   rof: '1',
-  shots: '12',                    // Shots equals total ammo count
+  shots: '1',                    // Shots equals total ammo count
   ammoPerMod: 12,                   // "12/1*"
   costPerAmmo: 50000 / 4,           // "$50K/4" => $12,500 per missile
   launcherModPer: 1,                // 1 Mod per launcher mount
@@ -141,7 +141,7 @@ const WEAPONS = [
   range: '200/400/800',
   dmg: '8d6',
   rof: '1',
-  shots: '8',
+  shots: '1',
   ammoPerMod: 8,                    // "8/1*"
   costPerAmmo: 100000 / 4,          // "$100K/4" => $75,000 each
   launcherModPer: 1,
@@ -158,7 +158,7 @@ const WEAPONS = [
   range: '300/600/1200',
   dmg: '8d12',
   rof: '1',
-  shots: '8',
+  shots: '1',
   ammoPerMod: 8,                    // "8/1*"
   costPerAmmo: 1000000 / 8 ,         // "$1M/8" => $125,000 each
   launcherModPer: 1,
@@ -172,7 +172,7 @@ const WEAPONS = [
   range: '300/600/1200',
   dmg: '10d12',
   rof: '1',
-  shots: '4',
+  shots: '1',
   ammoPerMod: 4,                    // "4/1*"
   costPerAmmo: 1000000 / 4 ,         // "$1M/4" => $250,000 each
   launcherModPer: 1,
@@ -188,13 +188,11 @@ const WEAPONS = [
   range:'Dropped',
   dmg:'6d10',
   rof:'1',
-  // ammo handling
-  shots:'12',        // show user-entered ammo in the table
-  ammoPerMod: 12,      // 12 bombs use 1 Mod (storage)
-  // bay cost: if not set, we’ll default to using w.cost as bay cost per mount
-  launcherModPer: 1,   // 1 Mod per Bomb Bay (mount)
-  launcherCost: 50000,  // null => fall back to w.cost per bay
-  cost: 500000 / 12,       // use your existing number as “per bay” cost (leave as-is if you prefer 0)
+  shots:'1',
+  ammoPerMod: 12,          // 12 bombs per 1 Mod of storage
+  launcherModPer: 1,       // 1 Mod per Bomb Bay (mount)
+  launcherCost: 50000,     // cost per Bomb Bay
+  costPerAmmo: 500000 / 12, // ≈ $41,666 per bomb (from $500k per 12)
   notes:'AP 10, HW, LBT. Up to 250 lb. bombs.'
 },
 {
@@ -204,11 +202,11 @@ const WEAPONS = [
   range:'Dropped',
   dmg:'8d10',
   rof:'1',
-  shots:'8',
-  ammoPerMod: 8,       // 8 bombs per 1 Mod
+  shots:'1',
+  ammoPerMod: 8,           
   launcherModPer: 1,
   launcherCost: 50000,
-  cost: 1000000 / 8,
+  costPerAmmo: 1000000 / 8, // $125,000 per bomb
   notes:'AP 20, HW, 10" radius. 251–500 lb. bombs.'
 },
 {
@@ -218,11 +216,11 @@ const WEAPONS = [
   range:'Dropped',
   dmg:'10d10',
   rof:'1',
-  shots:'4',
-  ammoPerMod: 4,       // 4 bombs per 1 Mod
+  shots:'1',
+  ammoPerMod: 4,
   launcherModPer: 1,
   launcherCost: 50000,
-  cost: 1000000 / 4,
+  costPerAmmo: 1000000 / 4, // $250,000 per bomb
   notes:'AP 30, HW, 20" radius. 501–1000 lb. bombs.'
 },
 {
@@ -232,11 +230,11 @@ const WEAPONS = [
   range:'Dropped',
   dmg:'10d10',
   rof:'1',
-  shots:'2',
-  ammoPerMod: 2,       // 2 bombs per 1 Mod
+  shots:'1',
+  ammoPerMod: 2,
   launcherModPer: 1,
   launcherCost: 50000,
-  cost: 1000000 / 2,
+  costPerAmmo: 1000000 / 2, // $500,000 per bomb
   notes:'AP 40, HW, 30" radius. 1001–4000 lb. bombs.'
 },
 {
@@ -247,12 +245,13 @@ const WEAPONS = [
   dmg:'10d10',
   rof:'1',
   shots:'1',
-  ammoPerMod: 1,       // 1 bomb per 1 Mod
+  ammoPerMod: 1,           // 1 bomb per 1 Mod
   launcherModPer: 1,
   launcherCost: 50000,
-  cost: 1000000,
+  costPerAmmo: 1000000,    // $1,000,000 per bomb
   notes:'AP 40, HW, 50" radius. 4001–8000 lb. bombs.'
 },
+
  
   
 ];
@@ -272,7 +271,7 @@ let equippedWeapons = [];
     "Crew Space":              { label: "Crew Space",              limit: "U", cost: s => 10000 * s },
     "Deflector Screens":       { label: "Deflector Screens",       limit: 1,   cost: s => (s <= 12 ? 2 : s <= 24 ? 3 : 5) * 100000 }, // scaled to plausible cost
     "Electromagnetic Shielding": { label: "Electromagnetic Shielding", limit: 1, cost: s => 5000 * s },
-    "Fixed":                   { label: "Fixed",                   limit: "U", cost: s => 0 * s },
+  
     "FTL Drive":               { label: "FTL Drive",               limit: 1,   cost: s => 2_000_000 * s, slotFn: s => Math.ceil(s / 2) },
 	"Kalian FTL": {
 	  label: "Kalian FTL",
@@ -284,9 +283,9 @@ let equippedWeapons = [];
 
     "Fuel Pods":               { label: "Fuel Pods",               limit: "U", cost: s => 100000 * s },
     "Garage / Hangar":         { label: "Garage / Hangar",         limit: "U", cost: s => 1000000 * s },
-    "Linked":                  { label: "Linked",                  limit: "U", cost: s => 0 * s },
+   
     "Mercantile":              { label: "Mercantile",              limit: "U", cost: s => 100000 * s },
-    "Missile Launcher":        { label: "Missile Launcher",        limit: "U", cost: s => 50000 * s },
+   
     "Passenger Pod":           { label: "Passenger Pod",           limit: "U", cost: s => 50000 * s },
     "Sensor Suite, Galactic":  { label: "Sensor Suite, Galactic",  limit: 1,   cost: s => 100000 * s },
     "Sensor Suite, Planetary": { label: "Sensor Suite, Planetary", limit: 1,   cost: s => 50000 * s },
@@ -304,7 +303,7 @@ let equippedWeapons = [];
     "Superstructure":          { label: "Superstructure",          limit: "U", cost: s => 5000000 * s },
     "Targeting System":        { label: "Targeting System",        limit: 1,   cost: s => 10000 * s },
     "Teleporter":              { label: "Teleporter",              limit: "U", cost: _ => 5_000_000 },
-    "Torpedo Tubes":           { label: "Torpedo Tubes",           limit: "U", cost: s => 500000 * s },
+   
     "Tractor Beam":            { label: "Tractor Beam",            limit: "U", cost: s => 1000000 * s }
   };
 
