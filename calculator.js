@@ -597,7 +597,7 @@ function linkFixedBonuses(mode, qty){
   const q = Math.max(0, parseInt(qty || 0, 10));
 
   const toHit = (q >= 4) ? 2 : (q >= 2 ? 1 : 0);
-  const dmgPerWeapon = (mode === 'linked') ? 3 : 6;  // per custom rule
+  const dmgPerWeapon = (mode === 'linked') ? 2 : 3;  // per custom rule
   const dmg = dmgPerWeapon * q;
 
   return { toHit, dmg, shownGroup: q }; // show the *actual* qty as the group size
