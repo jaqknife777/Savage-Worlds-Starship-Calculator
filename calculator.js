@@ -849,6 +849,7 @@ function calculateMods() {
 		  break;
 
 
+
 		case "Kalian FTL":
 		  astrogationBonus += 2;
 		  break;
