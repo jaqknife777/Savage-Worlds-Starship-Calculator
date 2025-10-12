@@ -549,7 +549,9 @@ function updateWeaponFormVisibility() {
   // Linked/Fixed controls appear only for linkable weapons
   const linkable = isLinkableWeapon(w);
   weaponUI.linkModeRow.style.display  = linkable ? '' : 'none';
-  weaponUI.linkGroupRow.style.display = (linkable && weaponUI.linkMode.value !== 'none') ? '' : 'none';
+  // Group size is auto = Quantity now → don't show manual selector
+  weaponUI.linkGroupRow.style.display = 'none';
+ // weaponUI.linkGroupRow.style.display = (linkable && weaponUI.linkMode.value !== 'none') ? '' : 'none';
 
   // defaults for ammo types
   if (showAmmoMounts) {
@@ -557,6 +559,8 @@ function updateWeaponFormVisibility() {
     if (!weaponUI.ammo.value || parseInt(weaponUI.ammo.value,10) < 0) weaponUI.ammo.value = 0;
   }
 }
+
+
 // re-run when mode changes so group selector toggles
 weaponUI.linkMode?.addEventListener('change', () => {
   const w = WEAPONS.find(x => x.key === weaponUI.select.value);
@@ -578,23 +582,23 @@ function computeEffectiveGroup(mode, qty, selectedGroup){
 
 
 
-// Returns { toHit, dmg, effGroup }:
-// - toHit is flat: +1 for 2-group, +2 for 4-group
-// - dmg stays "as is": linked = +4 per weapon; fixed = +8 per weapon
-function linkFixedBonuses(mode, group, qty){
-  const eff = computeEffectiveGroup(mode, qty, group);
-  if (!eff) return { toHit: 0, dmg: 0, effGroup: 0 };
 
-  const toHit = (eff === 4 ? 2 : 1); // capped by group size only
+// --- Linked/Fixed bonuses based on Quantity ---
+// toHit: +1 for qty>=2, +2 for qty>=4 (capped)
+// dmg: per-weapon bonus (Linked +4 each, Fixed +8 each), scales with qty
+function linkFixedBonuses(mode, qty){
+  if (mode !== 'linked' && mode !== 'fixed') {
+    return { toHit: 0, dmg: 0, shownGroup: 0 };
+  }
+  const q = Math.max(0, parseInt(qty || 0, 10));
 
-  let dmgPerWeapon = 0;
-  if (mode === 'linked') dmgPerWeapon = 4;
-  else if (mode === 'fixed') dmgPerWeapon = 8;
+  const toHit = (q >= 4) ? 2 : (q >= 2 ? 1 : 0);
+  const dmgPerWeapon = (mode === 'linked') ? 3 : 6;  // per custom rule
+  const dmg = dmgPerWeapon * q;
 
-  const dmg = dmgPerWeapon * eff; // per-weapon dmg, group count weapons
-
-  return { toHit, dmg, effGroup: eff };
+  return { toHit, dmg, shownGroup: q }; // show the *actual* qty as the group size
 }
+
 
 
 if (weaponUI.select) weaponUI.select.addEventListener('change', updateWeaponFormVisibility);
@@ -1014,42 +1018,40 @@ function addWeapon(){
   const w = WEAPONS.find(x => x.key === key);
   if (!w) return;
 
-  // Compute the slot impact of *this* addition
   let newEntry, newMods = 0;
 
   const linkable = isLinkableWeapon(w);
   const mode  = linkable ? weaponUI.linkMode.value : 'none';
-  const group = linkable ? parseInt(weaponUI.linkGroup.value || '2', 10) : 2;
 
   if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') {
     const launchers = Math.max(1, parseInt(weaponUI.launchers.value || '1', 10));
     const ammo = Math.max(0, parseInt(weaponUI.ammo.value || '0', 10));
-    newEntry = { key, qty: launchers, ammo, level: 1, mode: 'none', group: 2 };
-    newMods  = weaponModsFor(w, 1, launchers, ammo, launchers, 'none', 2);
+    newEntry = { key, qty: launchers, ammo, level: 1, mode: 'none', group: 0 };
+    newMods  = weaponModsFor(w, 1, launchers, ammo, launchers, 'none', 0);
   } else if (w.type === 'level') {
     const qty = Math.max(1, parseInt(weaponUI.qty.value || '1', 10));
     const maxLvl = getMaxMassDriverLevel();
     const level = Math.min(maxLvl, Math.max(1, parseInt(weaponUI.level.value || '1', 10)));
+    const group = linkable ? qty : 0; // ← auto-match group = quantity
     newEntry = { key, qty, level, ammo: 0, mode, group };
     newMods  = weaponModsFor(w, level, qty, 0, qty, mode, group);
   } else {
     const qty = Math.max(1, parseInt(weaponUI.qty.value || '1', 10));
+    const group = linkable ? qty : 0; // ← auto-match group = quantity
     newEntry = { key, qty, level: 1, ammo: 0, mode, group };
     newMods  = weaponModsFor(w, 1, qty, 0, qty, mode, group);
   }
 
-  // Capacity check: current build plus this weapon
   const snap = computeCapacityAndSlots();
   if (snap.slotsUsed + newMods > snap.totalCapacity) {
     alert("Not enough Mod slots remaining for that weapon.");
-    return; // don’t add
+    return;
   }
-
-  // OK, add
   equippedWeapons.push(newEntry);
   renderWeapons();
   calculateMods();
 }
+
 
 
 
@@ -1087,9 +1089,9 @@ function renderWeapons(){
 	const dmgDisp    = w.dmg.replace('X', ew.level || '');
 	const shotsDisp  = (w.shots === 'ammo') ? String(ew.ammo) : w.shots;
 	
-	const bonus      = linkFixedBonuses(ew.mode, ew.group, ew.qty);
+	const bonus      = linkFixedBonuses(ew.mode, ew.qty);
 	const modeLabel  = (ew.mode === 'linked' ? 'Linked' : (ew.mode === 'fixed' ? 'Fixed' : '—'));
-	const groupLabel = (bonus.effGroup ? String(bonus.effGroup) : '—');
+	const groupLabel = (bonus.shownGroup ? String(bonus.shownGroup) : '—');
 	
 	
 
@@ -1100,7 +1102,7 @@ function renderWeapons(){
 	  prettyName, w.range, dmgDisp, w.rof, shotsDisp,
 	  String(mods),
 	  '$' + Number(entryCost).toLocaleString(),
-	  w.notes + (bonus.effGroup
+	  w.notes + (bonus.shownGroup
 		? ` ( ${modeLabel} x${groupLabel}: +${bonus.toHit} to hit, +${bonus.dmg} dmg; mods halved )`
 		: ''),
 	  String(ew.qty),
