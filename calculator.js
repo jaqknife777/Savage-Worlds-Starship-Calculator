@@ -487,7 +487,7 @@ function calculateMods() {
     let modCost = 0;
     let crew = data.crew;
     let toughness = data.toughness;
-    let speed = parseInt(data.accTS.split("/")[1], 10); // middle number = top speed
+    let speed = parseInt(data.accTS.split("/")[2], 10); // middle number = top speed
 	let astrogationBonus = 0;
 
 
