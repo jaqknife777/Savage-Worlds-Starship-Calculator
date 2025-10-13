@@ -57,9 +57,9 @@ It calculates base stats by Size, applies Modifications (with slot & cost rules)
 ---
 
 ##📜 Credits & Legal
-**Savage Worlds® and The Last Parsec™ © Pinnacle Entertainment Group.
-**This is an unofficial, non-commercial fan tool.
-**Please support the official game and its creators!
+**Savage Worlds® and The Last Parsec™ © Pinnacle Entertainment Group.**
+**This is an unofficial, non-commercial fan tool.**
+**Please support the official game and its creators!**
 
 ---
 
