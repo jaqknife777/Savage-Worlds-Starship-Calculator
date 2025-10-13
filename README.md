@@ -54,7 +54,7 @@ It calculates base stats by Size, applies Modifications (with slot & cost rules)
   - **Download/Upload** JSON
   - **Share URL** (state in URL hash; no server)
 
-
+---
 
 ##📜 Credits & Legal
 **Savage Worlds® and The Last Parsec™ © Pinnacle Entertainment Group.
