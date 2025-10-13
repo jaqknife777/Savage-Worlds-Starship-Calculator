@@ -12,26 +12,18 @@ It calculates base stats by Size, applies Modifications (with slot & cost rules)
 ## ✨ Current Settings and Features
 
 - **Size presets** (Tiny → World Killer): Acc/TS, Climb, Toughness **(Armor)**, Mods, Crew, Energy, Cost.
-- **Modifications UI:** input-first rows (controls on the right, labels on the left) with live recalculation.
+- **Modifications UI:** input-first rows (controls on the left, labels on the right) with live recalculation.
 - **Capacity enforcement:** counters & weapon adds auto-clamp so total **Mod Slots Used ≤ Capacity**.
 - **Speed rules**
   - **Speed:** +5 Acc **and** +50 TS per rank.
   - **Speed Reduction:** −5 Acc and −50 TS, **+1 Mod capacity** per rank.
   - Mutually exclusive (UI auto-clears the other).
-- **Armor display:** Toughness shown as `Toughness (Armor)` using size armor table; each **Armor** mod adds **+2 Toughness** and **+2 Armor**.
 - **Energy & Fuel Pods**
   - **Fuel Pods:** +50% **base** Energy per pod (additive), **slots = ceil(Size/2)**, **cost = 100k × Size**.
 - **Gated / sized mods**
   - **Garage / Hangar:** Size ≥ 12; max **⌊Size/8⌋**; **8 slots** each; **$1,000,000** each.
-  - **Superstructure:** Size ≥ **24** (Gargantuan+); **10 slots** each; cost = **$5,000,000 × Size**.
+  - **Superstructure:** Size ≥ **24** (Gargantuan+); **24 slots** each; cost = **$5,000,000**.
   - **Mercantile:** Size ≥ **16** (Huge+); **2 slots** each; **$100,000** each.
-  - **Atmospheric:** slots = **ceil(Size/2)**; **$50,000 × Size**.
-  - **Deflector Screens:** slots **2** (≤12), **3** (≤24), **5** (>24); **$10,000 × Size**.
-  - **Electromagnetic Shielding:** **2 slots**; **$5,000 × Size**.
-  - **Sensor Suite, Galactic:** **2 slots**; **$1,000,000**.
-  - **Sloped Armor:** **2 slots**; **$5,000 × Size**.
-  - **Shields:** **ceil(Size/2)** slots; **$25,000 × Size**.
-  - **Stealth System:** **Size** slots; **$50,000 × Size**.
   - **Kalian FTL:** like FTL for slots, **cost = 4,000,000 × Size**, grants **+2 Astrogation**.
 - **Weapons**
   - Catalog: Auto-Cannons, Cannons, **Ion Cannons**, Lasers, **Flamethrower**, **Grenade Launcher**, Missiles, Torpedoes, Bombs, **Mass Driver**.
