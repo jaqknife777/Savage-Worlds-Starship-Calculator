@@ -64,8 +64,13 @@ It calculates base stats by Size, applies Modifications (with slot & cost rules)
 ```bash
 # Option A: open the file
 open index.html     # or double-click it
-
 # Option B (recommended): simple local server
 python3 -m http.server 8080
 # then visit
 http://localhost:8080
+
+
+##📜 Credits & Legal
+**Savage Worlds® and The Last Parsec™ © Pinnacle Entertainment Group.
+**This is an unofficial, non-commercial fan tool.
+**Please support the official game and its creators!
