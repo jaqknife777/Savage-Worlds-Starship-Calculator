@@ -54,6 +54,13 @@ It calculates base stats by Size, applies Modifications (with slot & cost rules)
   - **Download/Upload** JSON
   - **Share URL** (state in URL hash; no server)
 
+
+
+##📜 Credits & Legal
+**Savage Worlds® and The Last Parsec™ © Pinnacle Entertainment Group.
+**This is an unofficial, non-commercial fan tool.
+**Please support the official game and its creators!
+
 ---
 
 ## 🚀 Quick Start
@@ -68,9 +75,3 @@ open index.html     # or double-click it
 python3 -m http.server 8080
 # then visit
 http://localhost:8080
-
-
-##📜 Credits & Legal
-**Savage Worlds® and The Last Parsec™ © Pinnacle Entertainment Group.
-**This is an unofficial, non-commercial fan tool.
-**Please support the official game and its creators!
