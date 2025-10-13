@@ -152,7 +152,7 @@ const WEAPONS = [
   ammoPerMod: 12,                   // "12/1*"
   costPerAmmo: 50000 / 4,           // "$50K/4" => $12,500 per missile
   launcherModPer: 1,                // 1 Mod per launcher mount
-  launcherCost: 50000,                  // set a cost if you want launchers to cost money
+  launcherCost: 50000,                  // set a cost of launchers to cost money
   notes: 'AP 8, HW, SBT.'
 },
 
@@ -392,8 +392,8 @@ let equippedWeapons = [];
 	"Superstructure": {
 	  label: "Superstructure (Gargantuan+)",
 	  limit: "U",
-	  cost: s => 5_000_000 * s,
-	  slotFn: _ => 16          // ← each Superstructure consumes 10 Mod slots
+	  cost: s => 5_000_000,
+	  slotFn: _ => 24          // ← each Superstructure consumes 10 Mod slots
 	},
 
     "Targeting System":        { label: "Targeting System",        limit: 1,   cost: s => 10000 * s },
@@ -685,7 +685,7 @@ function computeCapacityAndSlots(modCountsOverride, weaponsOverride) {
     return out;
   })();
 
-  // Apply same clamps you use in calculateMods()
+  // Apply same clamps in calculateMods()
   // (Mercantile Huge+, Superstructure Large+, Garage/Hangar cap)
 	if (data.size < 16 && (modCounts["Mercantile"] || 0)) {
 	  modCounts["Mercantile"] = 0;          // Huge+ only
@@ -717,7 +717,7 @@ function computeCapacityAndSlots(modCountsOverride, weaponsOverride) {
     slotsUsed += perCountSlots * count;
 
     if (name === "Speed Reduction") {
-      // each rank grants +1 capacity (your current rule)
+      // each rank grants +1 capacity 
       extraCapacity += 1 * count;
     }
   });
@@ -817,7 +817,7 @@ function calculateMods() {
 		}
 
 		if (modName === "Superstructure") {
-			if (data.size < 12) count = 0; // not allowed below Large
+			if (data.size < 24) count = 0; // not allowed below Large
 		}
 
 
@@ -1002,7 +1002,7 @@ function weaponCostFor(w, level, shipSize, qty, ammo, launchers){
   if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') {
     const bays = Math.max(1, parseInt(launchers||1,10)); // launchers or bomb bays
     const ammoCount = Math.max(0, parseInt(ammo||0,10));
-    // For bombs: if launcherCost is null, use w.cost as per-bay cost (keeps your current totals)
+    // For bombs: if launcherCost is null, use w.cost as per-bay cost 
     const perBayCost = (w.launcherCost == null) ? (w.cost || 0) : (w.launcherCost || 0);
     const launcherCost = bays * perBayCost;
     // missiles/torpedoes may have per-ammo costs; bombs don’t by default
