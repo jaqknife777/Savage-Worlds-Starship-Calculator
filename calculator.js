@@ -1,4 +1,4 @@
-// calculator.js (fixed)
+// calculator.js
 document.addEventListener("DOMContentLoaded", () => {
 	const shipSizeSelect = document.getElementById("shipSize");
 	const shipNameInput = document.getElementById("shipName");
