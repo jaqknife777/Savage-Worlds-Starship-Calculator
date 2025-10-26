@@ -900,30 +900,34 @@ function canFixedWeapon(w) {
 
 
 function updateWeaponFormVisibility() {
-  const w = WEAPONS.find(x => x.key === weaponUI.select.value);
+  // Grab selected weapon
+  const w = WEAPONS.find(x => x.key === weaponUI.select?.value);
   const type = w?.type || 'fixed';
 
+  // --- Mass Driver level row ---
   const showLevel = (type === 'level');
-  weaponUI.rowLevel.style.display = showLevel ? '' : 'none';
+  if (weaponUI.rowLevel) weaponUI.rowLevel.style.display = showLevel ? '' : 'none';
   if (showLevel && weaponUI.level) {
     const maxLvl = getMaxMassDriverLevel();
-    weaponUI.level.min = '1';
+    weaponUI.level.min  = '1';
     weaponUI.level.step = '1';
-    weaponUI.level.max = String(maxLvl);
+    weaponUI.level.max  = String(maxLvl);
     const cur = Math.max(1, parseInt(weaponUI.level.value || '1', 10));
     weaponUI.level.value = String(Math.min(cur, maxLvl));
   }
 
-  // Decide if we can offer Linked/Fixed controls for the current qty
+  // --- Only show mount mode when Qty is 2 or 4 AND the family supports linking OR fixed ---
   const qty = Math.max(1, parseInt(weaponUI.qty?.value || '1', 10));
   const canOfferMode = (qty === 2 || qty === 4) && (canLinkWeapon(w) || canFixedWeapon(w));
 
-  weaponUI.linkModeRow.style.display = canOfferMode ? '' : 'none';
-  weaponUI.linkGroupRow.style.display = canOfferMode ? '' : 'none';
+  // Guard against missing DOM nodes (if ids don’t match, this won’t throw)
+  if (weaponUI.linkModeRow)  weaponUI.linkModeRow.style.display  = canOfferMode ? '' : 'none';
+  if (weaponUI.linkGroupRow) weaponUI.linkGroupRow.style.display = canOfferMode ? '' : 'none';
 
-  // If we can't offer modes, reset to none to avoid stale state
+  // If you can’t offer modes, reset the select so stale values don’t stick
   if (!canOfferMode && weaponUI.linkMode) weaponUI.linkMode.value = 'none';
 }
+
 
 
 // Also clamp when user types level:
