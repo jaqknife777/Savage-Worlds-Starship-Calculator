@@ -590,12 +590,14 @@ document.addEventListener("DOMContentLoaded", () => {
 			slotFn: s => Math.ceil(s / 2)
 		},
 
-		"": {
+		// ✅ correct
+		"Crew Reduction": {
 		  label: "Crew Reduction",
 		  limit: 5,
 		  cost: _ => 10000,
-		  slotFn: _ => 0            // does NOT consume slots
+		  slotFn: _ => 0
 		},
+
 		
 		"Crew Space": {
 		  label: "Crew Space",
