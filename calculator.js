@@ -1192,10 +1192,14 @@ weaponUI.level?.addEventListener('input', () => {
 					break;
 
 				case "Crew Reduction":
-					// –4 crew per rank (per slot). Never drop below 1 crew total.
-					crew = Math.max(1, Math.ceil(crew - 4 * count));
+					// –30% crew per rank (per slot). Never drop below 1 crew total.
+					crew = Math.max(1, Math.ceil(crew * .7 * count));
 					break;
 
+				case "Crew Space":
+					// +30% crew per rank (per slot). Never drop below 1 crew total.
+					crew = Math.max(1, Math.ceil(crew * 1.3 * count));
+					break;
 
 
 				case "Kalian FTL":
