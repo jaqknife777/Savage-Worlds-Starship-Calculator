@@ -409,16 +409,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		// Mass Driver (level-based)
 		{
-			key: 'mass_driver',
-			name: 'Mass Driver (Level X)',
-			range: '100/200/400',
-			dmg: 'Xd12',
-			rof: '1',
-			shots: '15',
-			mods: 'level/2',
-			cost: '100000*size',
-			notes: 'HW. Shots 10 lb per level; $100/level each. Range ×3 in space.',
-			type: 'level'
+		  key: 'mass_driver',
+		  name: 'Mass Driver (Level X)',
+		  range: '100/200/400',
+		  dmg: 'Xd12',
+		  rof: '1',
+		  shots: '15',
+		  mods: 'level/2',
+		  cost: '100000*size',
+		  notes: 'HW. Mods per mount = ceil(Level/2). Shots 10 lb per level; $100/level each. Range ×3 in space.',
+		  type: 'level'
 		},
 
 
@@ -867,50 +867,36 @@ document.addEventListener("DOMContentLoaded", () => {
 	}
 
 
-	function updateWeaponFormVisibility() {
-		const w = WEAPONS.find(x => x.key === weaponUI.select.value);
-		const type = w?.type || 'fixed';
-		const linkable = isLinkableWeapon(w);
+function updateWeaponFormVisibility() {
+  const w = WEAPONS.find(x => x.key === weaponUI.select.value);
+  const type = w?.type || 'fixed';
+  const linkable = isLinkableWeapon(w);
 
-		// Read current quantity (mounts)
-		const qtyVal = parseInt(weaponUI.qty?.value || '1', 10) || 1;
-		const showLinkControls = linkable && (qtyVal === 2 || qtyVal === 4);
+  // ...existing code...
 
-		// Show/hide blocks
-		const showMissile = (type === 'missile' || type === 'torpedo' || type === 'bombs');
-		const showLevel = (type === 'level');
+  const showLevel = (type === 'level');
+  weaponUI.rowLevel.style.display = showLevel ? '' : 'none';
 
-		// Fixed/Level weapons use Quantity (mounts)
-		weaponUI.rowQty.style.display = showMissile ? 'none' : '';
-		weaponUI.rowLevel.style.display = showLevel ? '' : 'none';
-		weaponUI.rowLaunchers.style.display = showMissile ? '' : 'none';
-		weaponUI.rowAmmo.style.display = showMissile ? '' : 'none';
+  // ⬇️ NEW: set max level whenever Mass Driver is selected
+  if (showLevel && weaponUI.level) {
+    const maxLvl = getMaxMassDriverLevel();
+    weaponUI.level.min = '1';
+    weaponUI.level.step = '1';
+    weaponUI.level.max = String(maxLvl);
+    const cur = Math.max(1, parseInt(weaponUI.level.value || '1', 10));
+    weaponUI.level.value = String(Math.min(cur, maxLvl));
+  }
 
-		// Linked/Fixed controls only if qty is 2 or 4
-		weaponUI.linkModeRow.style.display = showLinkControls ? '' : 'none';
-		// We no longer use manual "group", but hide just in case:
-		if (weaponUI.linkGroupRow) weaponUI.linkGroupRow.style.display = 'none';
+  // ...existing defaults for missile/torp/bombs...
+}
 
-		// If not allowed, force mode to 'none'
-		if (!showLinkControls && weaponUI.linkMode) {
-			weaponUI.linkMode.value = 'none';
-		}
-
-		// Defaults for missile/torpedo/bombs
-		if (showMissile) {
-			if (!weaponUI.launchers.value || parseInt(weaponUI.launchers.value, 10) < 1) weaponUI.launchers.value = 1;
-			if (!weaponUI.ammo.value || parseInt(weaponUI.ammo.value, 10) < 0) weaponUI.ammo.value = 0;
-		}
-	}
-
-
-
-	// re-run when mode changes so group selector toggles
-	weaponUI.linkMode?.addEventListener('change', () => {
-		const w = WEAPONS.find(x => x.key === weaponUI.select.value);
-		const linkable = isLinkableWeapon(w);
-		weaponUI.linkGroupRow.style.display = (linkable && weaponUI.linkMode.value !== 'none') ? '' : 'none';
-	});
+// Also clamp when user types level:
+weaponUI.level?.addEventListener('input', () => {
+  const maxLvl = getMaxMassDriverLevel();
+  let v = Math.max(1, parseInt(weaponUI.level.value || '1', 10));
+  if (v > maxLvl) v = maxLvl;
+  weaponUI.level.value = String(v);
+});
 
 
 
