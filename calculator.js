@@ -665,6 +665,14 @@ document.addEventListener("DOMContentLoaded", () => {
 			limit: "U",
 			cost: s => 50000 * s
 		},
+
+		"Science Lab": {
+		  label: "Science Lab",
+		  limit: "U",            // change to 1 if you want only one lab
+		  cost: s => 50_000 * s,   // example: scales with Size
+		  slotFn: _ => 5         // ← uses 5 Mod slots per lab
+		},
+
 		// Sensor Suite, Galactic: 2 slots, limit 1
 		"Sensor Suite, Galactic": {
 			label: "Sensor Suite, Galactic",
