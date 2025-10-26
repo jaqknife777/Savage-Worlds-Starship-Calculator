@@ -591,15 +591,19 @@ document.addEventListener("DOMContentLoaded", () => {
 		},
 
 		"Crew Reduction": {
-			label: "Crew Reduction",
-			limit: 5,
-			cost: _ => 10000
+		  label: "Crew Reduction",
+		  limit: 5,
+		  cost: _ => 10000,
+		  slotFn: _ => 0            // does NOT consume slots
 		},
+		
 		"Crew Space": {
-			label: "Crew Space",
-			limit: "U",
-			cost: s => 10000 * s
+		  label: "Crew Space",
+		  limit: "U",
+		  cost: s => 10000 * s,
+		  slotFn: _ => 4            // consumes 4 slots per rank
 		},
+
 		// Deflector Screens: 2 slots for Small–Large (≤12), 3 for Huge–Gargantuan (≤24), 5 for larger
 
 		"Deflector Screens": {
@@ -1040,6 +1044,11 @@ weaponUI.level?.addEventListener('input', () => {
 				// each rank grants +1 capacity 
 				extraCapacity += 1 * count;
 			}
+
+			  // ⬇️ NEW: Crew Reduction grants +4 capacity each
+			  if (name === "Crew Reduction") {
+			    extraCapacity += 4 * count;
+			  }
 		});
 
 		// Add weapon slots (from state unless override provided)
@@ -1194,6 +1203,7 @@ weaponUI.level?.addEventListener('input', () => {
 				case "Crew Reduction":
 					// –20% crew per rank (per slot). Never drop below 1 crew total.
 					crew = Math.max(1, Math.ceil(crew * .8 * count));
+					extraCapacity += 4 * count;
 					break;
 
 				case "Crew Space":
