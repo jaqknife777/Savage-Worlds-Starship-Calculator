@@ -907,7 +907,6 @@ function canFixedWeapon(w) {
 
 
 function updateWeaponFormVisibility() {
-  // Grab selected weapon
   const w = WEAPONS.find(x => x.key === weaponUI.select?.value);
   const type = w?.type || 'fixed';
 
@@ -923,35 +922,42 @@ function updateWeaponFormVisibility() {
     weaponUI.level.value = String(Math.min(cur, maxLvl));
   }
 
-  // --- Only show mount mode when Qty is 2 or 4 AND the family supports linking OR fixed ---
-  const qty = Math.max(1, parseInt(weaponUI.qty?.value || '1', 10));
-  const canOfferMode = (qty === 2 || qty === 4) && (canLinkWeapon(w) || canFixedWeapon(w));
+  // 🔧 NEW: toggle ammo-style UI (missiles/torpedoes/bombs) vs. standard qty
+  const isAmmoType = !!w && (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs');
 
-  // Guard against missing DOM nodes (if ids don’t match, this won’t throw)
+  if (weaponUI.rowLaunchers) weaponUI.rowLaunchers.style.display = isAmmoType ? '' : 'none';
+  if (weaponUI.rowAmmo)       weaponUI.rowAmmo.style.display       = isAmmoType ? '' : 'none';
+  if (weaponUI.rowQty)        weaponUI.rowQty.style.display        = isAmmoType ? 'none' : ''; // hide Qty (we use Launchers instead)
+
+  // sensible defaults/limits for ammo inputs
+  if (isAmmoType && weaponUI.ammo) {
+    weaponUI.ammo.min = '0';
+    weaponUI.ammo.step = '1';
+    // optional: hint how storage scales
+    // const per = Math.max(1, parseInt(w.ammoPerMod || 1, 10));
+    // weaponUI.ammo.placeholder = `${per} per 1 Mod`;
+  }
+
+  // --- Linked / Fixed modes (only for non-ammo families, qty 2 or 4) ---
+  const qty = Math.max(1, parseInt(weaponUI.qty?.value || '1', 10));
+  const canOfferMode = !isAmmoType && (qty === 2 || qty === 4) && (canLinkWeapon(w) || canFixedWeapon(w));
+
   if (weaponUI.linkModeRow)  weaponUI.linkModeRow.style.display  = canOfferMode ? '' : 'none';
   if (weaponUI.linkGroupRow) weaponUI.linkGroupRow.style.display = canOfferMode ? '' : 'none';
-
-  // If you can’t offer modes, reset the select so stale values don’t stick
   if (!canOfferMode && weaponUI.linkMode) weaponUI.linkMode.value = 'none';
 
-	
-// Optional: disable/enable specific options so the UI reflects what's legal
-const canLink  = canLinkWeapon(w);
-const canFixed = canFixedWeapon(w);
-
-const linkedOpt = weaponUI.linkMode?.querySelector('option[value="linked"]');
-const fixedOpt  = weaponUI.linkMode?.querySelector('option[value="fixed"]');
-
-if (linkedOpt) linkedOpt.disabled = !(canOfferMode && canLink);
-if (fixedOpt)  fixedOpt.disabled  = !(canOfferMode && canFixed);
-
-// if the currently selected mode is now disabled, reset to 'none'
-if (weaponUI.linkMode && weaponUI.linkMode.options[weaponUI.linkMode.selectedIndex]?.disabled) {
-  weaponUI.linkMode.value = 'none';
+  // Optional: disable unavailable mode choices
+  const canLink  = !isAmmoType && canLinkWeapon(w);
+  const canFixed = !isAmmoType && canFixedWeapon(w);
+  const linkedOpt = weaponUI.linkMode?.querySelector('option[value="linked"]');
+  const fixedOpt  = weaponUI.linkMode?.querySelector('option[value="fixed"]');
+  if (linkedOpt) linkedOpt.disabled = !(canOfferMode && canLink);
+  if (fixedOpt)  fixedOpt.disabled  = !(canOfferMode && canFixed);
+  if (weaponUI.linkMode && weaponUI.linkMode.options[weaponUI.linkMode.selectedIndex]?.disabled) {
+    weaponUI.linkMode.value = 'none';
+  }
 }
 
-	
-}
 
 
 
