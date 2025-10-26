@@ -1266,7 +1266,7 @@ weaponUI.level?.addEventListener('input', () => {
 					break;
 
 				case "Cargo Pod":
-				  cargoSpace += 10 * count; // 10 cu ft per pod
+				  cargoSpace += 125 * count; // 10 cu ft per pod
 				  break;
 
 				case "Speed":
