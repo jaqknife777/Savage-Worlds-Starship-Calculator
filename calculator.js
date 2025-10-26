@@ -827,27 +827,32 @@ document.addEventListener("DOMContentLoaded", () => {
 // ✅ Can be LINKED (dual/quad): heavy-and-below only
 function canLinkWeapon(w) {
   if (!w) return false;
-  if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs' || w.type === 'level') return false;
 
+  // hard blocks first
+  const HARD_BLOCK = new Set(['gren_launcher', 'flame_heavy']);
+  if (HARD_BLOCK.has(w.key)) return false;
+
+  // allow mass driver explicitly (it’s level-based but we want linking)
+  if (w.key === 'mass_driver') return true;
+
+  // still block ammo families from linking
+  if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') return false;
+
+  // heavy-and-below families (plus any others you listed)
   const LINKABLE_KEYS = new Set([
     // Auto-Cannons
     'ac_light','ac_medium','ac_heavy',
-    // Cannons 
+    // Cannons (include/exclude as desired)
     'cannon_sm','cannon_med','cannon_hev','cannon_shv',
-    // Lasers 
+    // Lasers (include/exclude as desired)
     'laser_light','laser_med','laser_heavy','laser_super','laser_mass','laser_mega',
-    // Ion Cannons (all defined are <= heavy)
+    // Ion Cannons
     'io_light','io_medium','io_heavy',
-	  // Mass Drivers
-	'mass_driver',
   ]);
-
-  // also hard block oddballs
-  const HARD_BLOCK = new Set(['gren_launcher','flame_heavy']);
-  if (HARD_BLOCK.has(w.key)) return false;
 
   return LINKABLE_KEYS.has(w.key);
 }
+
 
 // ✅ Can be FIXED (dual/quad): any Auto-Cannon, Cannon, Laser, Ion Cannon, and Mass Driver
 function canFixedWeapon(w) {
@@ -928,6 +933,24 @@ function updateWeaponFormVisibility() {
 
   // If you can’t offer modes, reset the select so stale values don’t stick
   if (!canOfferMode && weaponUI.linkMode) weaponUI.linkMode.value = 'none';
+
+	
+// Optional: disable/enable specific options so the UI reflects what's legal
+const canLink  = canLinkWeapon(w);
+const canFixed = canFixedWeapon(w);
+
+const linkedOpt = weaponUI.linkMode?.querySelector('option[value="linked"]');
+const fixedOpt  = weaponUI.linkMode?.querySelector('option[value="fixed"]');
+
+if (linkedOpt) linkedOpt.disabled = !(canOfferMode && canLink);
+if (fixedOpt)  fixedOpt.disabled  = !(canOfferMode && canFixed);
+
+// if the currently selected mode is now disabled, reset to 'none'
+if (weaponUI.linkMode && weaponUI.linkMode.options[weaponUI.linkMode.selectedIndex]?.disabled) {
+  weaponUI.linkMode.value = 'none';
+}
+
+	
 }
 
 
