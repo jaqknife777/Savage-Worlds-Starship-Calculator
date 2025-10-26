@@ -824,15 +824,41 @@ document.addEventListener("DOMContentLoaded", () => {
 	// A weapon is linkable if it's not missiles/torps/bombs and not level-based (Mass Driver)
 	// A weapon is linkable only if it isn't missiles/torps/bombs/level-based
 	// and not one of our explicit non-linkable types (grenade launcher, flamethrower).
-	function isLinkableWeapon(w) {
-		if (!w) return false;
-		const nonLinkableKeys = new Set([
-			'gren_launcher',
-			'flame_heavy'
-		]);
-		if (nonLinkableKeys.has(w.key)) return false;
-		return !(w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs' || w.type === 'level');
-	}
+// ✅ Can be LINKED (dual/quad): heavy-and-below only
+function canLinkWeapon(w) {
+  if (!w) return false;
+  if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs' || w.type === 'level') return false;
+
+  const LINKABLE_KEYS = new Set([
+    // Auto-Cannons
+    'ac_light','ac_medium','ac_heavy',
+    // Cannons (exclude Super Heavy)
+    'cannon_sm','cannon_med','cannon_hev',
+    // Lasers (exclude Super/Massive/Mega)
+    'laser_light','laser_med','laser_heavy',
+    // Ion Cannons (all defined are <= heavy)
+    'io_light','io_medium','io_heavy',
+  ]);
+
+  // also hard block oddballs
+  const HARD_BLOCK = new Set(['gren_launcher','flame_heavy']);
+  if (HARD_BLOCK.has(w.key)) return false;
+
+  return LINKABLE_KEYS.has(w.key);
+}
+
+// ✅ Can be FIXED (dual/quad): any Auto-Cannon, Cannon, Laser, Ion Cannon, and Mass Driver
+function canFixedWeapon(w) {
+  if (!w) return false;
+
+  // families: ac_, cannon_, laser_, io_, and Mass Driver (level)
+  if (w.key === 'mass_driver') return true;
+
+  const FIXABLE_PREFIXES = ['ac_', 'cannon_', 'laser_', 'io_'];
+  return FIXABLE_PREFIXES.some(p => w.key.startsWith(p));
+}
+
+
 
 
 
@@ -876,14 +902,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function updateWeaponFormVisibility() {
   const w = WEAPONS.find(x => x.key === weaponUI.select.value);
   const type = w?.type || 'fixed';
-  const linkable = isLinkableWeapon(w);
-
-  // ...existing code...
 
   const showLevel = (type === 'level');
   weaponUI.rowLevel.style.display = showLevel ? '' : 'none';
-
-  // ⬇️ NEW: set max level whenever Mass Driver is selected
   if (showLevel && weaponUI.level) {
     const maxLvl = getMaxMassDriverLevel();
     weaponUI.level.min = '1';
@@ -893,8 +914,17 @@ function updateWeaponFormVisibility() {
     weaponUI.level.value = String(Math.min(cur, maxLvl));
   }
 
-  // ...existing defaults for missile/torp/bombs...
+  // Decide if we can offer Linked/Fixed controls for the current qty
+  const qty = Math.max(1, parseInt(weaponUI.qty?.value || '1', 10));
+  const canOfferMode = (qty === 2 || qty === 4) && (canLinkWeapon(w) || canFixedWeapon(w));
+
+  weaponUI.linkModeRow.style.display = canOfferMode ? '' : 'none';
+  weaponUI.linkGroupRow.style.display = canOfferMode ? '' : 'none';
+
+  // If we can't offer modes, reset to none to avoid stale state
+  if (!canOfferMode && weaponUI.linkMode) weaponUI.linkMode.value = 'none';
 }
+
 
 // Also clamp when user types level:
 weaponUI.level?.addEventListener('input', () => {
@@ -1384,65 +1414,49 @@ weaponUI.level?.addEventListener('input', () => {
 
 
 
-	function addWeapon() {
-		const key = weaponUI.select.value;
-		const w = WEAPONS.find(x => x.key === key);
-		if (!w) return;
+function addWeapon() {
+  const key = weaponUI.select.value;
+  const w = WEAPONS.find(x => x.key === key);
+  if (!w) return;
 
-		let newEntry, newMods = 0;
+  let newEntry, newMods = 0;
 
-		const linkable = isLinkableWeapon(w);
-		const qtyVal = Math.max(1, parseInt(weaponUI.qty?.value || '1', 10));
-		const modeAllowed = linkable && (qtyVal === 2 || qtyVal === 4);
-		const mode = modeAllowed ? (weaponUI.linkMode?.value || 'none') : 'none';
-		const group = modeAllowed ? qtyVal : 0;
+  const qtyVal = Math.max(1, parseInt(weaponUI.qty?.value || '1', 10));
 
-		if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') {
-			const launchers = Math.max(1, parseInt(weaponUI.launchers.value || '1', 10));
-			const ammo = Math.max(0, parseInt(weaponUI.ammo.value || '0', 10));
-			newEntry = {
-				key,
-				qty: launchers,
-				ammo,
-				level: 1,
-				mode: 'none',
-				group: 0
-			};
-			newMods = weaponModsFor(w, 1, launchers, ammo, launchers, 'none', 0);
-		} else if (w.type === 'level') {
-			const maxLvl = getMaxMassDriverLevel();
-			const level = Math.min(maxLvl, Math.max(1, parseInt(weaponUI.level.value || '1', 10)));
-			newEntry = {
-				key,
-				qty: qtyVal,
-				level,
-				ammo: 0,
-				mode,
-				group
-			};
-			newMods = weaponModsFor(w, level, qtyVal, 0, qtyVal, mode, group);
-		} else {
-			newEntry = {
-				key,
-				qty: qtyVal,
-				level: 1,
-				ammo: 0,
-				mode,
-				group
-			};
-			newMods = weaponModsFor(w, 1, qtyVal, 0, qtyVal, mode, group);
-		}
+  // NEW: modes allowed if qty is 2 or 4 AND (link OR fixed is allowed)
+  const allowModes = (qtyVal === 2 || qtyVal === 4) && (canLinkWeapon(w) || canFixedWeapon(w));
+  const chosenMode = allowModes ? (weaponUI.linkMode?.value || 'none') : 'none';
+  const mode = (chosenMode === 'linked' && canLinkWeapon(w)) || (chosenMode === 'fixed' && canFixedWeapon(w))
+    ? chosenMode
+    : 'none';
+  const group = (mode !== 'none') ? qtyVal : 0;
 
-		const snap = computeCapacityAndSlots();
-		if (snap.slotsUsed + newMods > snap.totalCapacity) {
-			alert("Not enough Mod slots remaining for that weapon.");
-			return;
-		}
+  if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') {
+    const launchers = Math.max(1, parseInt(weaponUI.launchers.value || '1', 10));
+    const ammo = Math.max(0, parseInt(weaponUI.ammo.value || '0', 10));
+    newEntry = { key, qty: launchers, ammo, level: 1, mode: 'none', group: 0 };
+    newMods = weaponModsFor(w, 1, launchers, ammo, launchers, 'none', 0);
+  } else if (w.type === 'level') { // Mass Driver
+    const maxLvl = getMaxMassDriverLevel();
+    const level = Math.min(maxLvl, Math.max(1, parseInt(weaponUI.level.value || '1', 10)));
+    newEntry = { key, qty: qtyVal, level, ammo: 0, mode, group };
+    newMods = weaponModsFor(w, level, qtyVal, 0, qtyVal, mode, group);
+  } else {
+    newEntry = { key, qty: qtyVal, level: 1, ammo: 0, mode, group };
+    newMods = weaponModsFor(w, 1, qtyVal, 0, qtyVal, mode, group);
+  }
 
-		equippedWeapons.push(newEntry);
-		renderWeapons();
-		calculateMods();
-	}
+  const snap = computeCapacityAndSlots();
+  if (snap.slotsUsed + newMods > snap.totalCapacity) {
+    alert("Not enough Mod slots remaining for that weapon.");
+    return;
+  }
+
+  equippedWeapons.push(newEntry);
+  renderWeapons();
+  calculateMods();
+}
+
 
 
 
