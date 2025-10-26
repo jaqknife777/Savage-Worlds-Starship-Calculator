@@ -590,7 +590,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			slotFn: s => Math.ceil(s / 2)
 		},
 
-		"Crew Reduction": {
+		"": {
 		  label: "Crew Reduction",
 		  limit: 5,
 		  cost: _ => 10000,
@@ -1202,7 +1202,7 @@ weaponUI.level?.addEventListener('input', () => {
 
 				case "Crew Reduction":
 					// –20% crew per rank (per slot). Never drop below 1 crew total.
-					crew = Math.max(1, Math.ceil(crew * .8 * count));
+					crew = Math.max(1, Math.ceil(data.crew * Math.pow(0.8, count)));
 					extraCapacity += 4 * count;
 					break;
 
