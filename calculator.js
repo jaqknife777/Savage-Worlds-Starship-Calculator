@@ -273,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			shots: '20',
 			mods: 5,
 			cost: 1000000,
-			notes: 'AP 40, HW, LBT. 81–200mm.'
+			notes: 'AP 40, HW, LBT. 81–200mm. Size 14+ only.'
 		},
 
 		// Flamethrower (Heavy)
@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			shots: '100',
 			mods: 5,
 			cost: 2000000,
-			notes: 'AP 25, HW. Power core $5000.'
+			notes: 'AP 25, HW. Size 12+ only. Power core $5000.'
 		},
 		{
 			key: 'laser_mass',
