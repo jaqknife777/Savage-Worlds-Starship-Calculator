@@ -590,6 +590,13 @@ document.addEventListener("DOMContentLoaded", () => {
 			slotFn: s => Math.ceil(s / 2)
 		},
 
+		"Cargo Pod": {
+		  label: "Cargo Pod",
+		  limit: "U",        // unlimited
+		  cost: _ => 10000,      // change if you want a price (e.g., 5_000)
+		  slotFn: _ => 1     // 1 Mod slot per pod
+		},
+
 		// ✅ correct
 		"Crew Reduction": {
 		  label: "Crew Reduction",
@@ -1187,10 +1194,12 @@ weaponUI.level?.addEventListener('input', () => {
 		let weaponSlots = 0;
 		let weaponCost = 0;
 		let modCost = 0;
+		let cargoSpace = 0; // cubic feet from Cargo Pods
 		let crew = data.crew;
 		let toughness = data.toughness;
 		let armorVal = armorBySize[data.size] ?? 0;
 		let energyCap = data.energy; // base energy; will be adjusted by Fuel Pods
+		
 
 
 
@@ -1256,6 +1265,9 @@ weaponUI.level?.addEventListener('input', () => {
 					armorVal += 2 * count;
 					break;
 
+				case "Cargo Pod":
+				  cargoSpace += 10 * count; // 10 cu ft per pod
+				  break;
 
 				case "Speed":
 					// +5 Acc and +50 Top Speed per rank
@@ -1330,6 +1342,10 @@ weaponUI.level?.addEventListener('input', () => {
 			weaponUI.weaponCost.textContent = fmt(weaponCost);
 		}
 
+		const cargoEl = document.getElementById("cargoSpace");
+		if (cargoEl) cargoEl.textContent = `${cargoSpace}`;
+
+		
 		results.energy.textContent = energyCap;
 		results.modCost.textContent = fmt(modCost); // includes Fuel Pods
 		results.totalCost.textContent = fmt(data.cost + modCost);
