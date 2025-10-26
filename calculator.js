@@ -273,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			shots: '20',
 			mods: 5,
 			cost: 1000000,
-			notes: 'AP 40, HW, LBT. 81–200mm. Size 14+ only.'
+			notes: 'AP 40, HW, LBT. 81–200mm. Size 12+ only.'
 		},
 
 		// Flamethrower (Heavy)
@@ -833,9 +833,9 @@ function canLinkWeapon(w) {
     // Auto-Cannons
     'ac_light','ac_medium','ac_heavy',
     // Cannons (exclude Super Heavy)
-    'cannon_sm','cannon_med','cannon_hev',
+    'cannon_sm','cannon_med','cannon_hev','cannon_shv',
     // Lasers (exclude Super/Massive/Mega)
-    'laser_light','laser_med','laser_heavy',
+    'laser_light','laser_med','laser_heavy','laser_super','laser_mass','laser_mega',
     // Ion Cannons (all defined are <= heavy)
     'io_light','io_medium','io_heavy',
   ]);
