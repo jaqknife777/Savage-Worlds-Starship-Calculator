@@ -1386,30 +1386,30 @@ weaponUI.level?.addEventListener('input', () => {
 		return w.cost || 0;
 	}
 
-	function weaponModsFor(w, level, qty, ammo, launchers, mode, group) {
-		let baseMods = 0;
+function weaponModsFor(w, level, qty, ammo, launchers, mode, group) {
+  let baseMods = 0;
 
-		if (w.type === 'level') {
-			const lvl = Math.max(1, parseInt(level || 1, 10));
-			baseMods = Math.ceil(lvl / 2) * Math.max(1, parseInt(qty || 1, 10));
-		} else if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') {
-			const bays = Math.max(1, parseInt(launchers || 1, 10));
-			const a = Math.max(0, parseInt(ammo || 0, 10));
-			const per = Math.max(1, parseInt(w.ammoPerMod || 1, 10));
-			const ammoMods = Math.ceil(a / per);
-			const bayMods = (w.launcherModPer || 1) * bays;
-			baseMods = ammoMods + bayMods;
-		} else {
-			baseMods = (w.mods || 0) * Math.max(1, parseInt(qty || 1, 10));
-		}
+  if (w.type === 'level') {
+    const lvl = Math.max(1, parseInt(level || 1, 10));
+    baseMods = Math.ceil(lvl / 2) * Math.max(1, parseInt(qty || 1, 10));
+  } else if (w.type === 'missile' || w.type === 'torpedo' || w.type === 'bombs') {
+    const bays = Math.max(1, parseInt(launchers || 1, 10));
+    const a = Math.max(0, parseInt(ammo || 0, 10));
+    const per = Math.max(1, parseInt(w.ammoPerMod || 1, 10));
+    const ammoMods = Math.ceil(a / per);
+    const bayMods = (w.launcherModPer || 1) * bays;
+    baseMods = ammoMods + bayMods;
+  } else {
+    baseMods = (w.mods || 0) * Math.max(1, parseInt(qty || 1, 10));
+  }
 
-		// Halve mods for Linked/Fixed only on linkable weapons
-		if (isLinkableWeapon(w) && (mode === 'linked' || mode === 'fixed')) {
-			baseMods = Math.ceil(baseMods / 2); // round up to be conservative
-		}
+  // ⬇️ Halve for Linked/Fixed when the family supports that mode
+  if ((mode === 'linked' || mode === 'fixed') && (canLinkWeapon(w) || canFixedWeapon(w))) {
+    baseMods = Math.ceil(baseMods / 2);
+  }
 
-		return baseMods;
-	}
+  return baseMods;
+}
 
 
 
