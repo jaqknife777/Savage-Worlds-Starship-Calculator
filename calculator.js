@@ -1208,7 +1208,7 @@ weaponUI.level?.addEventListener('input', () => {
 
 				case "Crew Space":
 					// +20% crew per rank (per slot). Never drop below 1 crew total.
-					crew = Math.max(1, Math.ceil(crew * 1.2 * count));
+					crew = Math.max(1, Math.ceil(data.crew * Math.pow(1.2, count)));
 					break;
 
 
