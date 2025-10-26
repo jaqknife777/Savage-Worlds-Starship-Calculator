@@ -832,12 +832,14 @@ function canLinkWeapon(w) {
   const LINKABLE_KEYS = new Set([
     // Auto-Cannons
     'ac_light','ac_medium','ac_heavy',
-    // Cannons (exclude Super Heavy)
+    // Cannons 
     'cannon_sm','cannon_med','cannon_hev','cannon_shv',
-    // Lasers (exclude Super/Massive/Mega)
+    // Lasers 
     'laser_light','laser_med','laser_heavy','laser_super','laser_mass','laser_mega',
     // Ion Cannons (all defined are <= heavy)
     'io_light','io_medium','io_heavy',
+	  // Mass Drivers
+	'mass_driver',
   ]);
 
   // also hard block oddballs
