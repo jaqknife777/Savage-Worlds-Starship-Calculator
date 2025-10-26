@@ -417,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		  shots: '15',
 		  mods: 'level/2',
 		  cost: '100000*size',
-		  notes: 'HW. Mods per mount = ceil(Level/2). Shots 10 lb per level; $100/level each. Range ×3 in space.',
+		  notes: 'HW. LBT, Shots 10 lb per level; $100/level each. Range ×3 in space.',
 		  type: 'level'
 		},
 
