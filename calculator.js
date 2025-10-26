@@ -603,7 +603,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		  label: "Crew Space",
 		  limit: "U",
 		  cost: s => 10000 * s,
-		  slotFn: _ => 4            // consumes 4 slots per rank
+		  slotFn: _ => 3          // consumes 3 slots per rank
 		},
 
 		// Deflector Screens: 2 slots for Small–Large (≤12), 3 for Huge–Gargantuan (≤24), 5 for larger
@@ -657,13 +657,14 @@ document.addEventListener("DOMContentLoaded", () => {
 			label: "Mercantile (Huge+)",
 			limit: "U",
 			cost: _ => 100000, // flat $100k each
-			slotFn: _ => 2 // 2 Mod slots per Mercantile
+			slotFn: _ => 5 // 5 Mod slots per Mercantile
 		},
 
 		"Passenger Pod": {
 			label: "Passenger Pod",
 			limit: "U",
-			cost: s => 50000 * s
+			cost: s => 50000 * s,
+			slotFn: _ => 3 // 3 Mod slots per Mercantile
 		},
 
 		"Science Lab": {
